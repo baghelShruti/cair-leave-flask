@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAIR – Leave Review</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a237e 0%,#3949ab 100%);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.card{background:#fff;border-radius:20px;padding:36px;max-width:560px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.icon{font-size:56px;text-align:center;margin-bottom:16px;}
+h2{color:#1a237e;text-align:center;margin-bottom:6px;}
+.sub{color:#607d8b;text-align:center;font-size:14px;margin-bottom:24px;}
+.info-box{background:#f5f7fa;border-radius:12px;padding:16px;margin-bottom:20px;font-size:14px;line-height:2;}
+.info-box strong{color:#1a237e;}
+.status-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.b-p{background:#fff8e1;color:#e65100;}.b-a{background:#e8f5e9;color:#1b5e20;}
+.b-r{background:#ffebee;color:#b71c1c;}.b-e{background:#fff3e0;color:#e65100;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;margin-bottom:6px;font-weight:600;font-size:13px;color:#607d8b;text-transform:uppercase;}
+.form-group textarea{width:100%;padding:12px;border:2px solid #e0e6ed;border-radius:10px;font-size:14px;resize:vertical;font-family:inherit;}
+.form-group textarea:focus{outline:none;border-color:#1a237e;box-shadow:0 0 0 4px rgba(26,35,126,.07);}
+.btn{padding:13px 28px;border:none;border-radius:12px;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.25s;display:inline-block;text-decoration:none;margin:4px;}
+.btn-approve{background:#00c853;color:#fff;}.btn-reject{background:#ff1744;color:#fff;}
+.btn-meet{background:#ff9800;color:#fff;}.btn-back{background:#607d8b;color:#fff;}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.1);}
+.action-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:20px;}
+.alert{padding:14px;border-radius:10px;font-weight:600;font-size:14px;margin-bottom:16px;}
+.alert-error{background:#ffebee;color:#b71c1c;border-left:4px solid #ff1744;}
+.alert-info{background:#e3f2fd;color:#0d47a1;border-left:4px solid #00bcd4;}
+.done-box{text-align:center;padding:20px;}
+.fwd{margin-top:12px;color:#2e7d32;font-weight:600;}
+footer{text-align:center;font-size:12px;color:#b0bec5;margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="card">
+
+{% if error %}
+  <div class="icon">⚠️</div>
+  <h2>Cannot Process</h2>
+  <div class="sub">{{ error }}</div>
+  <div style="text-align:center;margin-top:16px;">
+    {% if app %}
+    <div class="info-box">
+      <div><strong>Application:</strong> {{ app.id }}</div>
+      <div><strong>Student:</strong> {{ app.name }} ({{ app.roll }})</div>
+      <div class="status-row">
+        <span class="badge {{ 'b-a' if app.supervisor_status=='approved' else 'b-r' if app.supervisor_status=='rejected' else 'b-p' }}">Sup: {{ app.supervisor_status }}</span>
+        <span class="badge {{ 'b-a' if app.hod_status=='approved' else 'b-r' if app.hod_status=='rejected' else 'b-p' }}">HoD: {{ app.hod_status }}</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+{% elif done %}
+  {% set color = '#00c853' if decision=='approved' else '#ff1744' if decision=='rejected' else '#ff9800' %}
+  {% set icon = '✅' if decision=='approved' else '❌' if decision=='rejected' else '📅' %}
+  <div class="done-box">
+    <div style="font-size:64px;">{{ icon }}</div>
+    <h2 style="margin-top:12px;">{{ decision.upper() }}</h2>
+    <p class="sub">You responded as <strong>{{ role.upper() }}</strong></p>
+    {% if decision=='approved' %}
+      {% if role=='supervisor' %}<div class="fwd">➡️ Forwarded to HoD for next approval</div>{% endif %}
+      {% if role=='hod' %}<div class="fwd">🎉 Leave fully approved!</div>{% endif %}
+    {% endif %}
+    <div class="info-box" style="text-align:left;margin-top:20px;">
+      <div><strong>Application:</strong> {{ app.id }}</div>
+      <div><strong>Student:</strong> {{ app.name }} ({{ app.roll }})</div>
+      <div class="status-row">
+        <span class="badge {{ 'b-a' if app.supervisor_status=='approved' else 'b-r' if app.supervisor_status=='rejected' else 'b-p' }}">Sup: {{ app.supervisor_status }}</span>
+        <span class="badge {{ 'b-a' if app.hod_status=='approved' else 'b-r' if app.hod_status=='rejected' else 'b-p' }}">HoD: {{ app.hod_status }}</span>
+      </div>
+    </div>
+    <p style="font-size:12px;color:#b0bec5;margin-top:12px;">Student notified at {{ app.email }}</p>
+  </div>
+
+{% elif need_remark %}
+  <div class="icon">❌</div>
+  <h2>Rejection Reason Required</h2>
+  <p class="sub">Please enter a mandatory reason before rejecting</p>
+
+  <div class="info-box">
+    <div><strong>Application:</strong> {{ app.id }}</div>
+    <div><strong>Student:</strong> {{ app.name }} ({{ app.roll }})</div>
+    <div><strong>Type:</strong> {{ app.type }} leave | {{ app.from_date }} → {{ app.to_date }} ({{ app.days }} days)</div>
+    <div><strong>Reason:</strong> {{ app.reason }}</div>
+  </div>
+
+  <form method="GET" action="/approve">
+    <input type="hidden" name="id" value="{{ app.id }}">
+    <input type="hidden" name="role" value="{{ role }}">
+    <input type="hidden" name="decision" value="rejected">
+    <div class="form-group">
+      <label>Rejection Reason *</label>
+      <textarea name="remark" rows="3" placeholder="Enter reason for rejection…" required></textarea>
+    </div>
+    <div class="action-row">
+      <button type="submit" class="btn btn-reject">❌ Confirm Rejection</button>
+    </div>
+  </form>
+
+{% else %}
+  <!-- Normal approval page — should not typically be reached directly -->
+  <div class="icon">📋</div>
+  <h2>Application Review</h2>
+  {% if app %}
+  <div class="info-box">
+    <div><strong>Application:</strong> {{ app.id }}</div>
+    <div><strong>Student:</strong> {{ app.name }} ({{ app.roll }})</div>
+    <div><strong>Type:</strong> {{ app.type }} leave</div>
+    <div><strong>Period:</strong> {{ app.from_date }} → {{ app.to_date }} ({{ app.days }} days)</div>
+    <div><strong>Reason:</strong> {{ app.reason }}</div>
+  </div>
+  {% endif %}
+{% endif %}
+
+<footer>CAIR Leave Management System · IIT Mandi</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard{% endblock %}
+{% block nav_links %}
+  <a href="javascript:void(0)" onclick="showTab('dashboard')">🏠 Dashboard</a>
+  <a href="javascript:void(0)" onclick="showTab('apply')">✍️ Apply</a>
+  <a href="javascript:void(0)" onclick="showTab('drafts')">📝 Drafts</a>
+  <a href="javascript:void(0)" onclick="showTab('status')">📋 My Applications</a>
+  <a href="javascript:void(0)" onclick="showTab('password')">🔒 Password</a>
+  <a href="/logout" class="danger">Logout</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── DASHBOARD ── -->
+<div id="tab-dashboard">
+  <div id="userGreeting" style="font-size:22px;font-weight:700;color:var(--primary);margin-bottom:20px;"></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">🏖️</div><div class="stat-num" id="cUsed">–</div><div class="stat-label">Casual Used</div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-num" id="cLeft">–</div><div class="stat-label">Casual Remaining</div></div>
+    <div class="stat-card"><div class="stat-icon">🏥</div><div class="stat-num" id="mUsed">–</div><div class="stat-label">Medical Used</div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-num" id="mLeft">–</div><div class="stat-label">Medical Remaining</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 Recent Applications</div>
+    <div id="recentApps"><p style="color:var(--muted);">Loading…</p></div>
+  </div>
+</div>
+
+<!-- ── APPLY ── -->
+<div id="tab-apply" style="display:none;">
+  <div class="card">
+    <div class="card-title">✍️ Apply for Leave</div>
+    <div id="applyAlert" class="alert"></div>
+    <input type="hidden" id="currentDraftId">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Leave Type</label>
+        <select id="appType" onchange="onTypeChange()">
+          <option value="">-- Select Type --</option>
+          <option value="casual">🏖️ Casual Leave</option>
+          <option value="medical">🏥 Medical Leave</option>
+          <option value="official_work">💼 Official Work</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Contact Phone</label>
+        <input type="tel" id="appPhone" placeholder="Mobile number" maxlength="10">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>From Date</label>
+        <input type="date" id="appFrom" onchange="calcDays()">
+      </div>
+      <div class="form-group">
+        <label>To Date</label>
+        <input type="date" id="appTo" onchange="calcDays()">
+      </div>
+    </div>
+
+    <div id="dayCalc" style="background:#e3f2fd;padding:14px;border-radius:12px;
+         margin-bottom:18px;font-weight:700;color:var(--primary);text-align:center;">
+      📅 Select dates to calculate leave days
+    </div>
+
+    <div class="form-group">
+      <label>Institute Email</label>
+      <input type="email" id="appEmail" placeholder="yourname@students.iitmandi.ac.in">
+    </div>
+
+    <div class="form-group">
+      <label>Reason for Leave</label>
+      <textarea id="appReason" rows="3" placeholder="Describe the reason…"></textarea>
+    </div>
+
+    <!-- Medical proof upload -->
+    <div class="form-group" id="medGroup" style="display:none;">
+      <label>Medical Proof (PDF / JPG / JPEG / PNG) <small style="color:var(--muted);">optional</small></label>
+      <input type="file" id="medFile" accept=".pdf,.jpg,.jpeg,.png"
+             style="padding:10px;border:2px dashed #90a4ae;border-radius:12px;background:#fafbfc;width:100%;">
+      <small style="color:var(--muted);font-size:12px;">Upload medical proof if available</small>
+    </div>
+
+    <!-- Supervisor only — HoD is auto-assigned -->
+    <div class="form-group" id="supervisorGroup">
+      <label>Supervisor</label>
+      <select id="appSupervisor"><option value="">Loading supervisors…</option></select>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="saveDraft()">💾 Save Draft</button>
+      <button class="btn btn-primary" onclick="submitApp()" id="submitBtn">
+        <span class="spinner" id="submitSpinner"></span> Submit Application
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DRAFTS ── -->
+<div id="tab-drafts" style="display:none;">
+  <div class="card">
+    <div class="card-title">📝 Saved Drafts</div>
+    <div id="draftsContainer"><p style="color:var(--muted);">Loading…</p></div>
+  </div>
+</div>
+
+<!-- ── STATUS ── -->
+<div id="tab-status" style="display:none;">
+  <div class="card">
+    <div class="card-title">📋 My Leave Applications</div>
+    <div id="statusContainer"><p style="color:var(--muted);">Loading…</p></div>
+  </div>
+</div>
+
+<!-- ── CHANGE PASSWORD ── -->
+<div id="tab-password" style="display:none;">
+  <div class="card" style="max-width:460px;">
+    <div class="card-title">🔒 Change Password</div>
+    <div id="pwAlert" class="alert"></div>
+    <div class="form-group"><label>Current Password</label><input type="password" id="oldPw"></div>
+    <div class="form-group"><label>New Password</label><input type="password" id="newPw"></div>
+    <div class="form-group"><label>Confirm New Password</label><input type="password" id="newPw2"></div>
+    <button class="btn btn-primary" onclick="changePw()">Update Password</button>
+  </div>
+</div>
+
+<!-- Delete modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-title">🗑️ Delete Application</div>
+    <div id="deleteDetails" style="background:#f5f7fa;border-radius:12px;padding:16px;margin-bottom:20px;"></div>
+    <p style="color:var(--danger);margin-bottom:20px;">This action cannot be undone.</p>
+    <div style="display:flex;gap:12px;">
+      <button class="btn btn-danger" onclick="confirmDelete()">Yes, Delete</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var currentUser=null, currentRoll=null, deleteId=null, hodName='';
+
+window.onload = async function(){
+  await loadUser();
+  await loadFaculty();
+  showTab('dashboard');
+};
+
+async function loadUser(){
+  var r = await api('/api/student/dashboard');
+  if(!r.success){ location.href='/login'; return; }
+  currentUser = r.user;
+  currentRoll = r.user.roll;
+  document.getElementById('userGreeting').textContent = 'Welcome, ' + r.user.name + ' 👋';
+  document.getElementById('cUsed').textContent = r.casual_used;
+  document.getElementById('cLeft').textContent = r.casual_remaining;
+  document.getElementById('mUsed').textContent = r.medical_used;
+  document.getElementById('mLeft').textContent = r.medical_remaining;
+  document.getElementById('appEmail').value = r.user.email || '';
+  document.getElementById('appPhone').value = r.user.phone || '';
+  loadRecent();
+}
+
+async function loadFaculty(){
+  var r = await api('/api/faculty');
+  var ss = document.getElementById('appSupervisor');
+  ss.innerHTML = '<option value="">-- Select Supervisor --</option>';
+  Object.entries(r.supervisors).forEach(([name]) => {
+    var o = document.createElement('option');
+    o.value = name; o.textContent = name;
+    ss.appendChild(o);
+  });
+  // Store HoD name for auto-assignment
+  var hodEntries = Object.entries(r.hod);
+  if(hodEntries.length) hodName = hodEntries[0][0];
+}
+
+function onTypeChange(){
+  var t = document.getElementById('appType').value;
+  document.getElementById('medGroup').style.display = t==='medical' ? '' : 'none';
+}
+
+function calcDays(){
+  var f  = document.getElementById('appFrom').value;
+  var t  = document.getElementById('appTo').value;
+  var el = document.getElementById('dayCalc');
+  if(!f||!t){ el.textContent='📅 Select dates to calculate leave days'; return; }
+  var d = Math.ceil((new Date(t)-new Date(f))/86400000)+1;
+  if(d<1){
+    el.textContent='⚠️ End date must be after start date';
+    el.style.background='#ffebee'; el.style.color='var(--danger)';
+  } else {
+    el.textContent='📅 '+d+' day'+(d>1?'s':'')+' requested';
+    el.style.background='#e3f2fd'; el.style.color='var(--primary)';
+  }
+}
+
+function showTab(t){
+  ['dashboard','apply','drafts','status','password'].forEach(id=>{
+    document.getElementById('tab-'+id).style.display = id===t ? '' : 'none';
+  });
+  if(t==='status')  loadStatus();
+  if(t==='drafts')  loadDrafts();
+}
+
+async function loadRecent(){
+  var r = await api('/api/applications/'+currentRoll);
+  var apps = (r.applications||[]).filter(a=>a.is_draft==='0').slice(0,5);
+  var el = document.getElementById('recentApps');
+  if(!apps.length){
+    el.innerHTML='<p style="color:var(--muted);">No applications yet. <a href="javascript:void(0)" onclick="showTab(\'apply\')" style="color:var(--primary);font-weight:700;">Apply now →</a></p>';
+    return;
+  }
+  el.innerHTML = apps.map(a=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;
+         background:#f5f7fa;border-radius:12px;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <strong>${a.id}</strong> · ${a.type} leave
+        <div style="font-size:12px;color:var(--muted);">${a.from_date} → ${a.to_date} (${a.days} days)</div>
+      </div>
+      ${statusBadge(a)}
+    </div>`).join('');
+}
+
+async function loadStatus(){
+  var r = await api('/api/applications/'+currentRoll);
+  var apps = (r.applications||[]).filter(a=>a.is_draft==='0');
+  var el = document.getElementById('statusContainer');
+  if(!apps.length){ el.innerHTML='<p style="color:var(--muted);">No applications yet.</p>'; return; }
+  el.innerHTML = apps.map(a=>`
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        <div>
+          <strong>${a.id}</strong>
+          <span style="font-size:13px;color:var(--muted);margin-left:8px;">${a.type} leave · ${a.from_date} → ${a.to_date} (${a.days} days)</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          ${statusBadge(a)}
+          ${a.status==='pending'&&a.supervisor_status==='pending'?
+            `<button class="btn btn-danger btn-sm" onclick="openDelete('${a.id}','${a.type}','${a.from_date}','${a.to_date}','${a.days}')">🗑️ Delete</button>`:''}
+        </div>
+      </div>
+      ${timeline(a)}
+    </div>`).join('');
+}
+
+function timeline(a){
+  var steps=[
+    {label:'Submitted',          date:a.submitted_at,       status:'done',              icon:'📤'},
+    {label:'Supervisor',         date:a.sup_approved_at,    status:a.supervisor_status, icon:'👨‍🏫', remark:a.supervisor_remark},
+    {label:'HoD',                date:a.hod_approved_at,    status:a.hod_status,        icon:'👨‍💼', remark:a.hod_remark},
+    {label:'CAIR Office',        date:a.office_approved_at, status:a.office_status,     icon:'🏢',  remark:a.office_remark},
+  ];
+  return '<div class="timeline">'+steps.map(s=>{
+    var isDone = s.status==='done'||s.status==='approved';
+    var cls = s.status==='done'?'done':s.status==='approved'?'done':s.status==='rejected'?'rej':s.status==='explanation'?'active':'wait';
+    var badge = s.status==='done'?'✓':s.status==='approved'?'✅':s.status==='rejected'?'❌':s.status==='explanation'?'📅':'⏳';
+    var remark = s.remark ? `<div class="tl-remark">💬 ${s.remark}</div>` : '';
+    return `<div class="tl-step">
+      <div class="tl-dot ${cls}">${badge}</div>
+      <div class="tl-info">
+        <strong>${s.icon} ${s.label}</strong>
+        <small>${s.date ? new Date(s.date).toLocaleString() : (s.status==='done'?'':'Pending')}</small>
+        ${remark}
+      </div></div>`;
+  }).join('')+'</div>';
+}
+
+function statusBadge(a){
+  var cls='pending', txt='Pending';
+  if(a.status==='approved')    { cls='approved';    txt='✅ Approved'; }
+  else if(a.status==='rejected'){ cls='rejected';   txt='❌ Rejected'; }
+  else if(a.status==='hod')    { cls='hod';         txt='🕐 With HoD'; }
+  else if(a.status==='office') { cls='office';      txt='🏢 With Office'; }
+  else if(a.status==='explanation'){ cls='explanation'; txt='📅 Meet Requested'; }
+  return `<span class="badge badge-${cls}">${txt}</span>`;
+}
+
+async function loadDrafts(){
+  var r = await api('/api/drafts');
+  var drafts = r.drafts||[];
+  var el = document.getElementById('draftsContainer');
+  if(!drafts.length){ el.innerHTML='<p style="color:var(--muted);">No saved drafts.</p>'; return; }
+  el.innerHTML = drafts.map(d=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;
+         background:#f5f7fa;border-radius:12px;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <span class="badge badge-draft">DRAFT</span> <strong>${d.id}</strong>
+        <div style="font-size:13px;color:var(--muted);">${d.type||'No type'} · ${d.from_date||'No dates'}</div>
+        <div style="font-size:12px;color:var(--muted);">Saved: ${d.updated_at?new Date(d.updated_at).toLocaleString():''}</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="openDraft('${d.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDraft('${d.id}')">🗑️ Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+async function openDraft(did){
+  var r = await api('/api/applications/'+currentRoll);
+  var d = (r.applications||[]).find(a=>a.id===did);
+  if(!d) return;
+  document.getElementById('currentDraftId').value  = did;
+  document.getElementById('appType').value          = d.type||'';
+  document.getElementById('appFrom').value          = d.from_date||'';
+  document.getElementById('appTo').value            = d.to_date||'';
+  document.getElementById('appPhone').value         = d.phone||'';
+  document.getElementById('appEmail').value         = d.email||'';
+  document.getElementById('appReason').value        = d.reason||'';
+  document.getElementById('appSupervisor').value    = d.supervisor||'';
+  onTypeChange(); calcDays();
+  showTab('apply');
+}
+
+async function deleteDraft(did){
+  if(!confirm('Delete this draft?')) return;
+  await fetch('/api/draft/'+did, {method:'DELETE'});
+  loadDrafts();
+}
+
+async function saveDraft(){
+  var did = document.getElementById('currentDraftId').value;
+  var data = {
+    type:       document.getElementById('appType').value,
+    from_date:  document.getElementById('appFrom').value,
+    to_date:    document.getElementById('appTo').value,
+    days:       getDays(),
+    phone:      document.getElementById('appPhone').value,
+    email:      document.getElementById('appEmail').value,
+    reason:     document.getElementById('appReason').value,
+    supervisor: document.getElementById('appSupervisor').value,
+    hod:        hodName,
+  };
+  if(did) data.draft_id = did;
+  var r = await api('/api/draft/save','POST',data);
+  if(r.success){
+    document.getElementById('currentDraftId').value = r.draft_id;
+    showAlert('applyAlert','Draft saved ('+r.draft_id+')','info');
+  } else showAlert('applyAlert', r.message, 'error');
+}
+
+function getDays(){
+  var f = document.getElementById('appFrom').value;
+  var t = document.getElementById('appTo').value;
+  if(!f||!t) return 0;
+  return Math.ceil((new Date(t)-new Date(f))/86400000)+1;
+}
+
+async function submitApp(){
+  var type  = document.getElementById('appType').value;
+  var from  = document.getElementById('appFrom').value;
+  var to    = document.getElementById('appTo').value;
+  var phone = document.getElementById('appPhone').value.trim();
+  var email = document.getElementById('appEmail').value.trim();
+  var reason= document.getElementById('appReason').value.trim();
+  var sup   = document.getElementById('appSupervisor').value;
+  var days  = getDays();
+
+  if(!type||!from||!to||!phone||!email||!reason){
+    showAlert('applyAlert','Please fill all fields','error'); return;}
+  if(!sup){
+    showAlert('applyAlert','Please select a supervisor','error'); return;}
+  if(days<1){
+    showAlert('applyAlert','Invalid date range','error'); return;}
+  if(!email.endsWith('@students.iitmandi.ac.in')){
+    showAlert('applyAlert','Use your institute email (@students.iitmandi.ac.in)','error'); return;}
+  if(!hodName){
+    showAlert('applyAlert','HoD not found. Contact admin.','error'); return;}
+
+  var fd = new FormData();
+  fd.append('type',type); fd.append('from',from); fd.append('to',to); fd.append('days',days);
+  fd.append('phone',phone); fd.append('email',email); fd.append('reason',reason);
+  fd.append('supervisor', sup); fd.append('hod', hodName);
+  var did = document.getElementById('currentDraftId').value;
+  if(did) fd.append('draft_id',did);
+
+  if(type==='medical'){
+    var mf = document.getElementById('medFile').files[0];
+    if(mf) fd.append('medical_proof',mf);
+  }
+
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitSpinner').classList.add('show');
+  var r = await fetch('/api/apply',{method:'POST',body:fd}).then(x=>x.json());
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitSpinner').classList.remove('show');
+
+  if(r.success){
+    showAlert('applyAlert','✅ '+r.message,'success');
+    document.getElementById('currentDraftId').value='';
+    ['appType','appFrom','appTo','appPhone','appEmail','appReason','appSupervisor'].forEach(id=>{
+      var el=document.getElementById(id); if(el) el.value='';});
+    document.getElementById('dayCalc').textContent='📅 Select dates to calculate leave days';
+    document.getElementById('dayCalc').style.background='#e3f2fd';
+    document.getElementById('dayCalc').style.color='var(--primary)';
+    document.getElementById('medGroup').style.display='none';
+    await loadUser();
+  } else showAlert('applyAlert', r.message, 'error');
+}
+
+function openDelete(id,type,from,to,days){
+  deleteId=id;
+  document.getElementById('deleteDetails').innerHTML=
+    `<p><strong>ID:</strong> ${id}</p><p><strong>Type:</strong> ${type}</p>
+     <p><strong>Period:</strong> ${from} → ${to} (${days} days)</p>`;
+  document.getElementById('deleteModal').classList.add('active');
+}
+function closeModal(){ deleteId=null; document.getElementById('deleteModal').classList.remove('active'); }
+async function confirmDelete(){
+  if(!deleteId) return;
+  var r = await fetch('/api/delete/'+deleteId+'?roll='+currentRoll,{method:'DELETE'}).then(x=>x.json());
+  closeModal();
+  if(r.success){ loadStatus(); loadUser(); }
+  else alert(r.message);
+}
+
+async function changePw(){
+  var o  = document.getElementById('oldPw').value;
+  var n  = document.getElementById('newPw').value;
+  var n2 = document.getElementById('newPw2').value;
+  if(n!==n2){ showAlert('pwAlert','Passwords do not match','error'); return;}
+  if(n.length<6){ showAlert('pwAlert','Min 6 characters','error'); return;}
+  var r = await api('/api/change-password','POST',{old_password:o,new_password:n});
+  if(r.success) showAlert('pwAlert','✅ Password changed successfully','success');
+  else showAlert('pwAlert', r.message, 'error');
+}
+</script>
+{% endblock %}

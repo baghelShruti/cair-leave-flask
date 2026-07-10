@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAIR - Student Leave Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #2a5298;
+            border-bottom: 3px solid #2a5298;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .login-box {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .login-box h2 {
+            color: #2a5298;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2a5298;
+        }
+
+        .form-group input.error {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .error-text {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-text.show {
+            display: block;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(42, 82, 152, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: #212529;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #2a5298;
+        }
+
+        .stat-card.medical {
+            border-left-color: #28a745;
+        }
+
+        .stat-card.used {
+            border-left-color: #dc3545;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2a5298;
+            margin-bottom: 5px;
+        }
+
+        .stat-card.medical .stat-number {
+            color: #28a745;
+        }
+
+        .stat-card.used .stat-number {
+            color: #dc3545;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .application-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .date-calc {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 600;
+            color: #1565c0;
+        }
+
+        .date-calc.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .faculty-select {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff3e0;
+            border-radius: 8px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .status-table th {
+            background: #2a5298;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .status-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .status-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .status-approved {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-rejected {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status-office {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status-explanation {
+            background: #fce4ec;
+            color: #880e4f;
+        }
+
+        .approval-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .explanation-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff8e1;
+            border-radius: 8px;
+            border: 2px solid #ffc107;
+            display: none;
+        }
+
+        .explanation-box.active {
+            display: block;
+        }
+
+        .email-preview {
+            background: #f8f9fa;
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .email-preview strong {
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1565c0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .logout-btn {
+            float: right;
+            background: #6c757d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .section-title {
+            color: #2a5298;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .email-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .email-modal.active {
+            display: flex;
+        }
+
+        .email-modal-content {
+            background: white;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .email-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .email-modal-header h3 {
+            color: #2a5298;
+        }
+
+        .close-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .email-body {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            line-height: 1.6;
+        }
+
+        .email-buttons {
+            margin: 20px 0;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .email-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 5px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .email-btn-accept {
+            background: #28a745;
+            color: white;
+        }
+
+        .email-btn-reject {
+            background: #dc3545;
+            color: white;
+        }
+
+        .email-btn-explain {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .approval-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Email Preview Modal -->
+<div id="emailModal" class="email-modal">
+    <div class="email-modal-content">
+        <div class="email-modal-header">
+            <h3>📧 Email Preview (Sent to Faculty)</h3>
+            <button class="close-btn" onclick="closeEmailModal()">Close</button>
+        </div>
+        <div id="emailModalBody"></div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>🏛️ CAIR - Student Leave Portal</h1>
+        <p>Centre for Artificial Intelligence and Robotics, IIT Mandi</p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('login')">Student Login</button>
+        <button class="nav-tab" onclick="showTab('dashboard')">My Dashboard</button>
+        <button class="nav-tab" onclick="showTab('apply')">Apply Leave</button>
+        <button class="nav-tab" onclick="showTab('status')">Application Status</button>
+    </div>
+
+    <!-- TAB 1: LOGIN -->
+    <div id="login" class="tab-content active">
+        <div class="login-box">
+            <h2>Student Login</h2>
+            <div id="loginAlert"></div>
+            
+            <div class="form-group">
+                <label>Roll Number</label>
+                <input type="text" id="loginRoll" placeholder="e.g., B19001" oninput="this.value = this.value.toUpperCase()">
+                <span class="error-text" id="loginRollError">Roll number already exists. Please login.</span>
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPass" placeholder="Enter password">
+            </div>
+            
+            <button class="btn btn-primary" onclick="login()">Login</button>
+            
+            <p style="margin-top: 20px; color: #6c757d; font-size: 12px;">
+                New student? Enter roll number and password to create account.
+            </p>
+        </div>
+    </div>
+
+    <!-- TAB 2: DASHBOARD -->
+    <div id="dashboard" class="tab-content">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <h2 class="section-title">Welcome, <span id="dashName">Student</span></h2>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="casualBalance">15</div>
+                <div class="stat-label">Casual Leaves Remaining</div>
+            </div>
+            <div class="stat-card medical">
+                <div class="stat-number" id="medicalBalance">15</div>
+                <div class="stat-label">Medical Leaves Remaining</div>
+            </div>
+            <div class="stat-card used">
+                <div class="stat-number" id="usedBalance">0</div>
+                <div class="stat-label">Total Used This Semester</div>
+            </div>
+        </div>
+
+        <h3 style="color: #495057; margin-bottom: 15px;">Recent Applications</h3>
+        <div id="recentApps"></div>
+    </div>
+
+    <!-- TAB 3: APPLY -->
+    <div id="apply" class="tab-content">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <h2 class="section-title">Apply for Leave</h2>
+        
+        <div class="application-form">
+            <div id="applyAlert"></div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="appName" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Roll Number</label>
+                    <input type="text" id="appRoll" readonly>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Leave Type</label>
+                    <select id="appType" onchange="updateBalanceCheck()">
+                        <option value="">Select Type</option>
+                        <option value="casual">Casual Leave</option>
+                        <option value="medical">Medical Leave</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number (10 digits)</label>
+                    <input type="tel" id="appPhone" placeholder="9876543210" maxlength="10" oninput="validatePhone()">
+                    <span class="error-text" id="phoneError">Phone must be exactly 10 digits</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Email (@students.iitmandi.ac.in only)</label>
+                <input type="email" id="appEmail" placeholder="yourname@students.iitmandi.ac.in" onblur="validateEmail()">
+                <span class="error-text" id="emailError">Email must end with @students.iitmandi.ac.in</span>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>From Date</label>
+                    <input type="date" id="appFrom" onchange="calculateDays()">
+                </div>
+                <div class="form-group">
+                    <label>To Date</label>
+                    <input type="date" id="appTo" onchange="calculateDays()">
+                </div>
+            </div>
+
+            <div class="date-calc" id="dayCalc">
+                Select dates to calculate number of days
+            </div>
+
+            <div class="form-group">
+                <label>Reason for Leave</label>
+                <textarea id="appReason" placeholder="Briefly explain why you need leave..."></textarea>
+            </div>
+
+            <div class="faculty-select">
+                <h4 style="margin-bottom: 15px; color: #e65100;">👤 Select Approvers</h4>
+                <div class="form-group">
+                    <label>Supervisor</label>
+                    <select id="appSupervisor">
+                        <option value="">Select Supervisor</option>
+                        <option value="Varun Sharma">Varun Sharma</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Head of Department (HoD)</label>
+                    <select id="appHod">
+                        <option value="">Select HoD</option>
+                        <option value="Varun Bhardwaj">Varun Bhardwaj</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="balanceWarning" class="alert alert-error hidden" style="margin-top: 15px;">
+                Insufficient leave balance! You cannot apply.
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 20px; width: 100%;" onclick="submitApplication()">
+                Submit Application
+            </button>
+
+            <!-- Email Preview -->
+            <div class="email-preview" id="emailPreview" style="display: none;">
+                <strong>📧 Email Preview (Sent to Supervisor & HoD):</strong><br><br>
+                <span id="emailContent"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: STATUS -->
+    <div id="status" class="tab-content">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <h2 class="section-title">My Application History</h2>
+        <div id="statusTable"></div>
+    </div>
+
+</div>
+
+<script>
+// ==================== DATA STORE ====================
+const STORAGE_KEY = 'cair_leave_system';
+
+function getStore() {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : {
+        users: {},
+        applications: [],
+        faculty: {
+            'Varun Sharma': { email: 'varunsharma01072001@gmail.com', role: 'supervisor' },
+            'Varun Bhardwaj': { email: 'varunbadkalia01072001@gmail.com', role: 'hod' }
+        }
+    };
+}
+
+function saveStore(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+let currentUser = null;
+
+// ==================== VALIDATION ====================
+function validateEmail() {
+    const email = document.getElementById('appEmail').value.trim();
+    const errorEl = document.getElementById('emailError');
+    const inputEl = document.getElementById('appEmail');
+    
+    if (!email) {
+        errorEl.classList.remove('show');
+        inputEl.classList.remove('error');
+        return false;
+    }
+    
+    if (!email.endsWith('@students.iitmandi.ac.in')) {
+        errorEl.classList.add('show');
+        inputEl.classList.add('error');
+        return false;
+    }
+    
+    errorEl.classList.remove('show');
+    inputEl.classList.remove('error');
+    return true;
+}
+
+function validatePhone() {
+    const phone = document.getElementById('appPhone').value;
+    const errorEl = document.getElementById('phoneError');
+    const inputEl = document.getElementById('appPhone');
+    
+    // Only allow digits
+    const cleaned = phone.replace(/\D/g, '');
+    document.getElementById('appPhone').value = cleaned;
+    
+    if (!cleaned) {
+        errorEl.classList.remove('show');
+        inputEl.classList.remove('error');
+        return false;
+    }
+    
+    if (cleaned.length !== 10) {
+        errorEl.classList.add('show');
+        inputEl.classList.add('error');
+        return false;
+    }
+    
+    errorEl.classList.remove('show');
+    inputEl.classList.remove('error');
+    return true;
+}
+
+// ==================== AUTH ====================
+function login() {
+    const roll = document.getElementById('loginRoll').value.trim().toUpperCase();
+    const pass = document.getElementById('loginPass').value;
+    const rollError = document.getElementById('loginRollError');
+    
+    if (!roll || !pass) {
+        showAlert('loginAlert', 'Please fill all fields', 'error');
+        return;
+    }
+
+    const store = getStore();
+    
+    // Check if user exists with DIFFERENT password (someone trying to use same roll)
+    if (store.users[roll]) {
+        // User exists - check password
+        if (store.users[roll].password !== pass) {
+            showAlert('loginAlert', 'Incorrect password for this roll number', 'error');
+            return;
+        }
+        // Correct password - login
+        currentUser = store.users[roll];
+        showAlert('loginAlert', 'Login successful!', 'success');
+        
+        document.getElementById('dashName').textContent = currentUser.name || currentUser.roll;
+        document.getElementById('appName').value = currentUser.name || currentUser.roll;
+        document.getElementById('appRoll').value = currentUser.roll;
+        
+        updateBalances();
+        setTimeout(() => showTab('dashboard'), 500);
+        return;
+    }
+
+    // New user - create account
+    store.users[roll] = {
+        roll: roll,
+        name: roll,
+        casualBalance: 15,
+        medicalBalance: 15,
+        password: pass
+    };
+    saveStore(store);
+    
+    currentUser = store.users[roll];
+    showAlert('loginAlert', 'Account created and logged in!', 'success');
+    
+    document.getElementById('dashName').textContent = currentUser.name || currentUser.roll;
+    document.getElementById('appName').value = currentUser.name || currentUser.roll;
+    document.getElementById('appRoll').value = currentUser.roll;
+    
+    updateBalances();
+    setTimeout(() => showTab('dashboard'), 500);
+}
+
+function logout() {
+    currentUser = null;
+    document.getElementById('loginRoll').value = '';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginAlert').innerHTML = '';
+    showTab('login');
+}
+
+// ==================== UI HELPERS ====================
+function showTab(tabId) {
+    if (!currentUser && tabId !== 'login') {
+        showAlert('loginAlert', 'Please login first', 'error');
+        // Reset to login tab
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('login').classList.add('active');
+        document.querySelector('.nav-tab').classList.add('active');
+        return;
+    }
+
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    
+    // Find and activate the correct nav tab
+    const tabs = document.querySelectorAll('.nav-tab');
+    const tabIndex = ['login', 'dashboard', 'apply', 'status'].indexOf(tabId);
+    if (tabs[tabIndex]) tabs[tabIndex].classList.add('active');
+
+    if (tabId === 'dashboard') updateDashboard();
+    if (tabId === 'status') updateStatusTable();
+}
+
+function showAlert(id, msg, type) {
+    const el = document.getElementById(id);
+    el.className = `alert alert-${type}`;
+    el.textContent = msg;
+    setTimeout(() => el.innerHTML = '', 4000);
+}
+
+// ==================== BALANCE & CALCULATIONS ====================
+function updateBalances() {
+    if (!currentUser) return;
+    const store = getStore();
+    const user = store.users[currentUser.roll];
+    
+    const used = store.applications.filter(a => 
+        a.roll === currentUser.roll && 
+        a.status === 'approved' &&
+        a.type === 'casual'
+    ).reduce((sum, a) => sum + a.days, 0);
+
+    const usedMedical = store.applications.filter(a => 
+        a.roll === currentUser.roll && 
+        a.status === 'approved' &&
+        a.type === 'medical'
+    ).reduce((sum, a) => sum + a.days, 0);
+
+    const remainingCasual = 15 - used;
+    const remainingMedical = 15 - usedMedical;
+
+    document.getElementById('casualBalance').textContent = Math.max(0, remainingCasual);
+    document.getElementById('medicalBalance').textContent = Math.max(0, remainingMedical);
+    document.getElementById('usedBalance').textContent = used + usedMedical;
+
+    currentUser.casualBalance = remainingCasual;
+    currentUser.medicalBalance = remainingMedical;
+}
+
+function calculateDays() {
+    const from = document.getElementById('appFrom').value;
+    const to = document.getElementById('appTo').value;
+    const calcEl = document.getElementById('dayCalc');
+    
+    if (!from || !to) {
+        calcEl.textContent = 'Select dates to calculate number of days';
+        calcEl.classList.remove('error');
+        return;
+    }
+
+    const d1 = new Date(from);
+    const d2 = new Date(to);
+    const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+    
+    if (diff < 1) {
+        calcEl.textContent = '❌ Invalid: End date must be after start date';
+        calcEl.classList.add('error');
+        return;
+    }
+
+    calcEl.textContent = `📅 Total Days: ${diff} day(s)`;
+    calcEl.classList.remove('error');
+    updateBalanceCheck();
+}
+
+function updateBalanceCheck() {
+    const type = document.getElementById('appType').value;
+    const from = document.getElementById('appFrom').value;
+    const to = document.getElementById('appTo').value;
+    const warning = document.getElementById('balanceWarning');
+
+    if (!type || !from || !to) {
+        warning.classList.add('hidden');
+        return;
+    }
+
+    const d1 = new Date(from);
+    const d2 = new Date(to);
+    const days = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+
+    if (days < 1) {
+        warning.classList.remove('hidden');
+        warning.textContent = 'Invalid date range!';
+        return;
+    }
+
+    const balance = type === 'casual' ? currentUser.casualBalance : currentUser.medicalBalance;
+    
+    if (days > balance) {
+        warning.classList.remove('hidden');
+        warning.textContent = `Insufficient ${type} leave balance! You need ${days} days but have ${balance} remaining.`;
+    } else {
+        warning.classList.add('hidden');
+    }
+}
+
+// ==================== APPLICATION SUBMISSION ====================
+function submitApplication() {
+    if (!currentUser) return;
+
+    const type = document.getElementById('appType').value;
+    const from = document.getElementById('appFrom').value;
+    const to = document.getElementById('appTo').value;
+    const phone = document.getElementById('appPhone').value.trim();
+    const email = document.getElementById('appEmail').value.trim();
+    const reason = document.getElementById('appReason').value.trim();
+    const supervisor = document.getElementById('appSupervisor').value;
+    const hod = document.getElementById('appHod').value;
+
+    // Validation
+    if (!type || !from || !to || !phone || !email || !reason || !supervisor || !hod) {
+        showAlert('applyAlert', 'Please fill all fields', 'error');
+        return;
+    }
+
+    // Validate email domain
+    if (!email.endsWith('@students.iitmandi.ac.in')) {
+        showAlert('applyAlert', 'Email must be @students.iitmandi.ac.in', 'error');
+        document.getElementById('appEmail').classList.add('error');
+        return;
+    }
+
+    // Validate phone
+    if (phone.length !== 10 || !/^\d{10}$/.test(phone)) {
+        showAlert('applyAlert', 'Phone must be exactly 10 digits', 'error');
+        return;
+    }
+
+    const d1 = new Date(from);
+    const d2 = new Date(to);
+    const days = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+
+    if (days < 1) {
+        showAlert('applyAlert', 'Invalid date range', 'error');
+        return;
+    }
+
+    const balance = type === 'casual' ? currentUser.casualBalance : currentUser.medicalBalance;
+    if (days > balance) {
+        showAlert('applyAlert', `Insufficient ${type} leave balance!`, 'error');
+        return;
+    }
+
+    const appId = 'CAIR/' + new Date().getFullYear() + '/' + type.toUpperCase().slice(0,2) + '/' + 
+                  String(Math.floor(Math.random() * 900) + 100);
+
+    const application = {
+        id: appId,
+        roll: currentUser.roll,
+        name: currentUser.name || currentUser.roll,
+        type: type,
+        from: from,
+        to: to,
+        days: days,
+        phone: phone,
+        email: email,
+        reason: reason,
+        supervisor: supervisor,
+        hod: hod,
+        supervisorStatus: 'pending',
+        hodStatus: 'pending',
+        officeStatus: 'pending',
+        explanation: '',
+        supervisorExplanation: '',
+        hodExplanation: '',
+        submittedAt: new Date().toISOString(),
+        status: 'pending'
+    };
+
+    const store = getStore();
+    store.applications.push(application);
+    saveStore(store);
+
+    // Generate and show email preview
+    showEmailPreview(application);
+
+    showAlert('applyAlert', `Application ${appId} submitted successfully!`, 'success');
+    
+    // Reset form
+    document.getElementById('appType').value = '';
+    document.getElementById('appFrom').value = '';
+    document.getElementById('appTo').value = '';
+    document.getElementById('appPhone').value = '';
+    document.getElementById('appEmail').value = '';
+    document.getElementById('appReason').value = '';
+    document.getElementById('appSupervisor').value = '';
+    document.getElementById('appHod').value = '';
+    document.getElementById('dayCalc').textContent = 'Select dates to calculate number of days';
+    document.getElementById('dayCalc').classList.remove('error');
+    updateBalances();
+}
+
+// ==================== EMAIL PREVIEW ====================
+function showEmailPreview(app) {
+    const store = getStore();
+    const supEmail = store.faculty[app.supervisor].email;
+    const hodEmail = store.faculty[app.hod].email;
+
+    const emailHtml = `
+        <div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p><strong>To:</strong> ${supEmail} (Supervisor), ${hodEmail} (HoD)</p>
+                <p><strong>From:</strong> CAIR Leave System &lt;leave@cair.iitmandi.ac.in&gt;</p>
+                <p><strong>Subject:</strong> Leave Application ${app.id} - ${app.name} (${app.roll})</p>
+            </div>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef;">
+                <p>Dear ${app.supervisor} and ${app.hod},</p>
+                
+                <p>Student <strong>${app.name}</strong> (Roll: ${app.roll}) has requested <strong>${app.type} leave</strong>:</p>
+                
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>📅 Period:</strong> ${app.from} to ${app.to} (${app.days} days)</p>
+                    <p><strong>📞 Contact:</strong> ${app.phone} | ${app.email}</p>
+                    <p><strong>📝 Reason:</strong> ${app.reason}</p>
+                    <p><strong>🏷️ Application ID:</strong> ${app.id}</p>
+                </div>
+                
+                <p style="font-weight: 600; color: #2a5298; margin-top: 20px;">Please review and take action:</p>
+                
+                <div style="text-align: center; margin: 25px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                    <button onclick="simulateApproval('${app.id}', 'supervisor', 'approved')" 
+                        style="background: #28a745; color: white; padding: 12px 30px; border: none; border-radius: 8px; margin: 5px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                        ✅ ACCEPT
+                    </button>
+                    <button onclick="simulateApproval('${app.id}', 'supervisor', 'rejected')" 
+                        style="background: #dc3545; color: white; padding: 12px 30px; border: none; border-radius: 8px; margin: 5px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                        ❌ REJECT
+                    </button>
+                    <button onclick="simulateApproval('${app.id}', 'supervisor', 'explanation')" 
+                        style="background: #ffc107; color: #212529; padding: 12px 30px; border: none; border-radius: 8px; margin: 5px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                        ❓ MORE EXPLANATION
+                    </button>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #fff8e1; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <p style="font-weight: 600; margin-bottom: 10px;">💬 Explanation / Comments (optional):</p>
+                    <textarea id="facultyComment_${app.id}" placeholder="Add your comments here if rejecting or requesting more info..." 
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; min-height: 60px; font-family: 'Segoe UI', sans-serif;"></textarea>
+                </div>
+                
+                <hr style="margin: 20px 0; border: 1px solid #e9ecef;">
+                
+                <p style="font-size: 12px; color: #6c757d;">
+                    This is an automated email from CAIR Leave Management System.<br>
+                    IIT Mandi, Himachal Pradesh
+                </p>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('emailPreview').style.display = 'block';
+    document.getElementById('emailContent').innerHTML = emailHtml;
+
+    // Also show in modal for better view
+    document.getElementById('emailModalBody').innerHTML = emailHtml;
+    document.getElementById('emailModal').classList.add('active');
+}
+
+function closeEmailModal() {
+    document.getElementById('emailModal').classList.remove('active');
+}
+
+// ==================== SIMULATE APPROVAL (For Testing) ====================
+function simulateApproval(appId, role, decision) {
+    const store = getStore();
+    const app = store.applications.find(a => a.id === appId);
+    if (!app) return;
+
+    const comment = document.getElementById(`facultyComment_${appId}`)?.value || '';
+
+    // Update status
+    if (role === 'supervisor' || role === 'hod') {
+        // For demo, update both supervisor and hod status when either button is clicked
+        if (decision === 'approved') {
+            app.supervisorStatus = 'approved';
+            app.hodStatus = 'approved';
+            app.officeStatus = 'pending';
+            app.status = 'office';
+        } else if (decision === 'rejected') {
+            app.supervisorStatus = 'rejected';
+            app.hodStatus = 'rejected';
+            app.officeStatus = 'rejected';
+            app.status = 'rejected';
+            if (comment) app.supervisorExplanation = comment;
+        } else if (decision === 'explanation') {
+            app.supervisorStatus = 'explanation';
+            app.hodStatus = 'explanation';
+            if (comment) app.supervisorExplanation = comment;
+        }
+    }
+
+    saveStore(store);
+
+    // Send notification email to student
+    showStudentNotification(app, decision, comment);
+
+    // Update UI
+    closeEmailModal();
+    updateDashboard();
+    updateStatusTable();
+    
+    // Show success message
+    const actionText = decision === 'approved' ? 'ACCEPTED' : decision === 'rejected' ? 'REJECTED' : 'EXPLANATION REQUESTED';
+    alert(`Application ${appId} has been ${actionText}!\n\nA notification email has been sent to the student at ${app.email}`);
+}
+
+function showStudentNotification(app, decision, comment) {
+    const actionText = decision === 'approved' ? 'APPROVED' : decision === 'rejected' ? 'REJECTED' : 'NEEDS MORE INFORMATION';
+    const color = decision === 'approved' ? '#28a745' : decision === 'rejected' ? '#dc3545' : '#ffc107';
+
+    const notificationHtml = `
+        <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 20px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div style="background: ${color}; color: white; padding: 20px; text-align: center;">
+                <h2 style="margin: 0;">📧 Leave Application ${actionText}</h2>
+            </div>
+            <div style="background: white; padding: 25px;">
+                <p>Dear ${app.name},</p>
+                
+                <p>Your leave application <strong>${app.id}</strong> has been <strong style="color: ${color};">${actionText}</strong> by the faculty.</p>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>Leave Type:</strong> ${app.type}</p>
+                    <p><strong>Period:</strong> ${app.from} to ${app.to} (${app.days} days)</p>
+                    <p><strong>Reason:</strong> ${app.reason}</p>
+                </div>
+                
+                ${comment ? `
+                <div style="background: #fff8e1; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                    <p><strong>💬 Faculty Comments:</strong></p>
+                    <p>${comment}</p>
+                </div>
+                ` : ''}
+                
+                ${decision === 'approved' ? `
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #28a745;">
+                    <p><strong>✅ Next Step:</strong> Your application has been forwarded to the CAIR Office for final processing.</p>
+                </div>
+                ` : ''}
+                
+                ${decision === 'rejected' ? `
+                <div style="background: #ffebee; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #dc3545;">
+                    <p><strong>❌ Status:</strong> Your application has been rejected. Please contact your supervisor for more details.</p>
+                </div>
+                ` : ''}
+                
+                ${decision === 'explanation' ? `
+                <div style="background: #fff8e1; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                    <p><strong>❓ Action Required:</strong> More information is needed. Please provide additional details and reapply.</p>
+                </div>
+                ` : ''}
+                
+                <hr style="margin: 20px 0; border: 1px solid #e9ecef;">
+                <p style="font-size: 12px; color: #6c757d;">
+                    CAIR Leave Management System<br>
+                    IIT Mandi, Himachal Pradesh
+                </p>
+            </div>
+        </div>
+    `;
+
+    // Show in a new modal or alert
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; justify-content: center; align-items: center;';
+    modal.innerHTML = `
+        <div style="max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <div style="background: white; border-radius: 12px; overflow: hidden;">
+                <div style="background: ${color}; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">📧 Email Sent to Student</h3>
+                    <button onclick="this.closest('.modal-overlay').remove()" style="background: white; color: ${color}; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: 600;">Close</button>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="margin-bottom: 15px; color: #6c757d; font-size: 13px;">
+                        <strong>To:</strong> ${app.email}<br>
+                        <strong>Subject:</strong> Leave Application ${app.id} - ${actionText}
+                    </p>
+                    ${notificationHtml}
+                </div>
+            </div>
+        </div>
+    `;
+    modal.className = 'modal-overlay';
+    document.body.appendChild(modal);
+}
+
+// ==================== DASHBOARD & STATUS ====================
+function updateDashboard() {
+    if (!currentUser) return;
+    updateBalances();
+    
+    const store = getStore();
+    const myApps = store.applications.filter(a => a.roll === currentUser.roll).slice(-5);
+    
+    let html = '';
+    if (myApps.length === 0) {
+        html = '<p style="color: #6c757d; text-align: center;">No applications yet</p>';
+    } else {
+        html = '<table class="status-table"><tr><th>ID</th><th>Type</th><th>Days</th><th>Status</th><th>Date</th></tr>';
+        myApps.reverse().forEach(app => {
+            const statusClass = getStatusClass(app);
+            html += `<tr>
+                <td>${app.id}</td>
+                <td>${app.type}</td>
+                <td>${app.days}</td>
+                <td><span class="status-badge ${statusClass}">${getStatusText(app)}</span></td>
+                <td>${app.from}</td>
+            </tr>`;
+        });
+        html += '</table>';
+    }
+    document.getElementById('recentApps').innerHTML = html;
+}
+
+function getStatusClass(app) {
+    if (app.supervisorStatus === 'explanation' || app.hodStatus === 'explanation') return 'status-explanation';
+    if (app.officeStatus === 'approved') return 'status-approved';
+    if (app.officeStatus === 'rejected') return 'status-rejected';
+    if (app.supervisorStatus === 'approved' && app.hodStatus === 'approved') return 'status-office';
+    return 'status-pending';
+}
+
+function getStatusText(app) {
+    if (app.officeStatus === 'approved') return 'Approved';
+    if (app.officeStatus === 'rejected') return 'Rejected';
+    if (app.supervisorStatus === 'explanation' || app.hodStatus === 'explanation') return 'Needs Info';
+    if (app.supervisorStatus === 'approved' && app.hodStatus === 'approved') return 'With Office';
+    if (app.supervisorStatus === 'rejected' || app.hodStatus === 'rejected') return 'Rejected';
+    return 'Pending';
+}
+
+function updateStatusTable() {
+    if (!currentUser) return;
+    
+    const store = getStore();
+    const myApps = store.applications.filter(a => a.roll === currentUser.roll);
+    
+    let html = '<table class="status-table"><tr><th>Application ID</th><th>Type</th><th>Period</th><th>Days</th><th>Supervisor</th><th>HoD</th><th>Office</th><th>Status</th></tr>';
+    
+    if (myApps.length === 0) {
+        html += '<tr><td colspan="8" style="text-align: center;">No applications found</td></tr>';
+    } else {
+        myApps.reverse().forEach(app => {
+            const supBadge = getApprovalBadge(app.supervisorStatus);
+            const hodBadge = getApprovalBadge(app.hodStatus);
+            const offBadge = getApprovalBadge(app.officeStatus);
+            const statusClass = getStatusClass(app);
+            
+            html += `<tr>
+                <td><strong>${app.id}</strong></td>
+                <td>${app.type}</td>
+                <td>${app.from} to ${app.to}</td>
+                <td>${app.days}</td>
+                <td>${supBadge}</td>
+                <td>${hodBadge}</td>
+                <td>${offBadge}</td>
+                <td><span class="status-badge ${statusClass}">${getStatusText(app)}</span></td>
+            </tr>`;
+            
+            if (app.supervisorExplanation || app.hodExplanation) {
+                html += `<tr><td colspan="8" style="background: #fff8e1; font-size: 12px; color: #e65100;">
+                    <strong>💬 Comments:</strong> ${app.supervisorExplanation || app.hodExplanation || ''}
+                </td></tr>`;
+            }
+        });
+    }
+    html += '</table>';
+    document.getElementById('statusTable').innerHTML = html;
+}
+
+function getApprovalBadge(status) {
+    const colors = {
+        'pending': '#fff3e0',
+        'approved': '#e8f5e9',
+        'rejected': '#ffebee',
+        'explanation': '#fce4ec'
+    };
+    const textColors = {
+        'pending': '#e65100',
+        'approved': '#2e7d32',
+        'rejected': '#c62828',
+        'explanation': '#880e4f'
+    };
+    return `<span style="background: ${colors[status] || '#f5f5f5'}; color: ${textColors[status] || '#333'}; padding: 2px 8px; border-radius: 10px; font-size: 11px; text-transform: uppercase;">${status}</span>`;
+}
+
+// ==================== APPROVAL INTERFACE (For Faculty via URL) ====================
+function renderApprovalInterface() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    const role = urlParams.get('role');
+    const id = urlParams.get('id');
+
+    if (action === 'approve' && role && id) {
+        document.body.innerHTML = `
+            <div style="max-width: 600px; margin: 50px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                <h2 style="color: #2a5298; margin-bottom: 20px;">Leave Application Review</h2>
+                <div id="appDetails"></div>
+                <div style="margin-top: 30px;">
+                    <button class="btn btn-success" onclick="processApproval('${id}', '${role}', 'approved')">✅ ACCEPT</button>
+                    <button class="btn btn-danger" style="margin-left: 10px;" onclick="processApproval('${id}', '${role}', 'rejected')">❌ REJECT</button>
+                    <button class="btn btn-warning" style="margin-left: 10px;" onclick="showExplanation('${id}', '${role}')">❓ MORE EXPLANATION</button>
+                </div>
+                <div id="explanationBox" class="explanation-box">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600;">Provide Explanation:</label>
+                    <textarea id="expText" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 10px;" rows="3"></textarea>
+                    <button class="btn btn-warning" onclick="submitExplanation('${id}', '${role}')">Submit Explanation Request</button>
+                </div>
+                <div id="approvalResult" style="margin-top: 20px;"></div>
+            </div>
+        `;
+        
+        const store = getStore();
+        const app = store.applications.find(a => a.id === id);
+        if (app) {
+            document.getElementById('appDetails').innerHTML = `
+                <p><strong>Student:</strong> ${app.name} (${app.roll})</p>
+                <p><strong>Leave Type:</strong> ${app.type}</p>
+                <p><strong>Period:</strong> ${app.from} to ${app.to} (${app.days} days)</p>
+                <p><strong>Reason:</strong> ${app.reason}</p>
+                <p><strong>Contact:</strong> ${app.phone} | ${app.email}</p>
+                <hr style="margin: 15px 0;">
+                <p><strong>Current Status:</strong> Supervisor: ${app.supervisorStatus} | HoD: ${app.hodStatus}</p>
+            `;
+        }
+    }
+}
+
+function processApproval(id, role, decision) {
+    const store = getStore();
+    const app = store.applications.find(a => a.id === id);
+    if (!app) return;
+
+    if (role === 'supervisor') {
+        app.supervisorStatus = decision;
+    } else if (role === 'hod') {
+        app.hodStatus = decision;
+    }
+
+    if (app.supervisorStatus === 'approved' && app.hodStatus === 'approved') {
+        app.officeStatus = 'pending';
+        app.status = 'office';
+    }
+
+    if (app.supervisorStatus === 'rejected' || app.hodStatus === 'rejected') {
+        app.officeStatus = 'rejected';
+        app.status = 'rejected';
+    }
+
+    saveStore(store);
+    document.getElementById('approvalResult').innerHTML = 
+        `<div class="alert alert-success">Application ${decision} successfully!</div>`;
+}
+
+function showExplanation(id, role) {
+    document.getElementById('explanationBox').classList.add('active');
+}
+
+function submitExplanation(id, role) {
+    const text = document.getElementById('expText').value.trim();
+    if (!text) {
+        alert('Please provide explanation');
+        return;
+    }
+
+    const store = getStore();
+    const app = store.applications.find(a => a.id === id);
+    if (!app) return;
+
+    if (role === 'supervisor') {
+        app.supervisorStatus = 'explanation';
+        app.supervisorExplanation = text;
+    } else {
+        app.hodStatus = 'explanation';
+        app.hodExplanation = text;
+    }
+
+    saveStore(store);
+    document.getElementById('approvalResult').innerHTML = 
+        `<div class="alert alert-success">Explanation request sent to student!</div>`;
+    document.getElementById('explanationBox').classList.remove('active');
+}
+
+// ==================== INIT ====================
+window.onload = function() {
+    renderApprovalInterface();
+    
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('appFrom').min = today;
+    document.getElementById('appTo').min = today;
+};
+</script>
+
+</body>
+</html>

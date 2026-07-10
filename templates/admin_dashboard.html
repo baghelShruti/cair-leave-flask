@@ -1,0 +1,610 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block nav_links %}
+  <span style="background:rgba(255,255,255,.15);padding:6px 14px;border-radius:8px;font-size:13px;">🛡️ Admin</span>
+  <a href="#" onclick="showTab('stats')">📊 Stats</a>
+  <a href="#" onclick="showTab('users')">👥 Users</a>
+  <a href="#" onclick="showTab('admins')">🛡️ Admins</a>
+  <a href="#" onclick="showTab('apps')">📋 Applications</a>
+  <a href="#" onclick="showTab('leaveRecords')">📑 Leave Records</a>
+  <a href="#" onclick="showTab('finalRecords')">📊 Final Records</a>
+  <a href="#" onclick="showTab('calendar')">📅 Calendar</a>
+  <a href="#" onclick="showTab('logs')">📜 Logs</a>
+  <a href="#" onclick="showTab('adminLogs')">🛡️ Admin Audit</a>
+  <a href="/logout" class="danger">Logout</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div id="tab-stats">
+  <div class="stats-grid" id="adminStats"></div>
+  <div class="card">
+    <div class="card-title">📋 Quick Overview</div>
+    <p style="color:var(--muted);">Select a tab above to manage users, applications, or view activity logs.</p>
+  </div>
+</div>
+
+<!-- Users -->
+<div id="tab-users" style="display:none;">
+  <div class="card">
+    <div class="card-title">👥 Students
+      <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="exportCSV('students')">⬇️ Export</button>
+    </div>
+    <div class="tbl-wrap"><table id="studentsTable"><tr><th>Name</th><th>Roll</th><th>Email</th><th>Phone</th><th>Actions</th></tr></table></div>
+  </div>
+  <div class="card">
+    <div class="card-title">👨‍🏫 Faculty
+      <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="exportCSV('faculty')">⬇️ Export</button>
+    </div>
+    <div class="tbl-wrap"><table id="facultyTable"><tr><th>Name</th><th>EmpID</th><th>Email</th><th>Phone</th><th>Actions</th></tr></table></div>
+  </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal">
+    <div class="modal-title">🔑 Reset Password</div>
+    <p id="resetTarget" style="color:var(--muted);margin-bottom:16px;"></p>
+    <div class="form-group"><label>New Password</label><input type="password" id="resetPw" placeholder="Min 6 characters"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="doReset()">Reset</button>
+      <button class="btn btn-outline" onclick="closeReset()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Applications -->
+<div id="tab-apps" style="display:none;">
+  <div class="card">
+    <div class="card-title">📋 All Leave Applications
+      <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="exportApps()">⬇️ Export</button>
+      <button class="btn btn-danger btn-sm" style="margin-left:10px;" onclick="resetCSV('applications')">🗑️ Reset</button>
+    </div>
+    <div class="tbl-wrap"><table id="appsTable">
+      <tr><th>ID</th><th>Student</th><th>Type</th><th>Period</th><th>Supervisor</th><th>HoD</th><th>Status</th></tr>
+    </table></div>
+  </div>
+</div>
+
+<!-- Leave Records -->
+<div id="tab-leaveRecords" style="display:none;">
+  <div class="card">
+    <div class="card-title">📑 All Leave Records
+      <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="exportFilteredLeaveRecords()">⬇️ Export Filtered</button>
+      <button class="btn btn-danger btn-sm" style="margin-left:10px;" onclick="resetCSV('leave-records')">🗑️ Reset</button>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;align-items:flex-end;">
+      <div class="form-group" style="margin:0;min-width:140px;"><label>Roll</label><input type="text" id="filterRoll" placeholder="e.g. B19001"></div>
+      <div class="form-group" style="margin:0;min-width:140px;"><label>From</label><input type="date" id="filterFrom"></div>
+      <div class="form-group" style="margin:0;min-width:140px;"><label>To</label><input type="date" id="filterTo"></div>
+      <div class="form-group" style="margin:0;min-width:140px;"><label>Type</label>
+        <select id="filterType"><option value="">All</option><option value="casual">Casual</option><option value="medical">Medical</option><option value="official_work">Official Work</option></select>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="applyFilters()">🔍 Apply Filters</button>
+      <button class="btn btn-outline btn-sm" onclick="clearFilters()">Clear</button>
+    </div>
+    <div class="tbl-wrap"><table id="leaveRecordsTable">
+      <tr><th>ID</th><th>Student</th><th>Type</th><th>Period</th><th>Days</th><th>Reason</th><th>Approved By</th><th>Actions</th></tr>
+    </table></div>
+  </div>
+</div>
+
+<!-- Final Records -->
+<div id="tab-finalRecords" style="display:none;">
+  <div class="card">
+    <div class="card-title">📊 Final Leave Records
+      <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="exportFinalRecords()">⬇️ Export</button>
+      <button class="btn btn-danger btn-sm" style="margin-left:10px;" onclick="resetCSV('final-records')">🗑️ Reset</button>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;align-items:flex-end;">
+      <div class="form-group" style="margin:0;min-width:140px;"><label>Roll</label><input type="text" id="filterFinalRoll" placeholder="e.g. B19001" oninput="loadFinalRecords()"></div>
+      <div class="form-group" style="margin:0;min-width:140px;"><label>From</label><input type="date" id="filterFinalFrom" onchange="loadFinalRecords()"></div>
+      <div class="form-group" style="margin:0;min-width:140px;"><label>To</label><input type="date" id="filterFinalTo" onchange="loadFinalRecords()"></div>
+      <div class="form-group" style="margin:0;min-width:140px;"><label>Type</label>
+        <select id="filterFinalType" onchange="loadFinalRecords()"><option value="">All</option><option value="casual">Casual</option><option value="medical">Medical</option></select>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="clearFinalFilters()">Clear</button>
+    </div>
+    <div class="tbl-wrap"><table id="finalRecordsTable">
+      <tr><th>Roll</th><th>Name</th><th>Casual Used/Rem</th><th>Medical Used/Rem</th><th>Last Updated</th></tr>
+    </table></div>
+  </div>
+</div>
+
+<!-- Admins -->
+<div id="tab-admins" style="display:none;">
+  <div class="card">
+    <div class="card-title">🛡️ Manage Admins</div>
+    <div style="margin-bottom:20px;">
+      <button class="btn btn-primary btn-sm" onclick="openCreateAdmin()">➕ Create New Admin</button>
+    </div>
+    <div class="tbl-wrap"><table id="adminsTable">
+      <tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
+    </table></div>
+  </div>
+</div>
+
+<!-- Create Admin Modal -->
+<div class="modal-overlay" id="createAdminModal">
+  <div class="modal">
+    <div class="modal-title">➕ Create Admin</div>
+    <div id="createAdminAlert" class="alert"></div>
+    <div class="form-group"><label>Name</label><input type="text" id="newAdminName"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="newAdminEmail"></div>
+    <div class="form-group"><label>Phone</label><input type="tel" id="newAdminPhone" maxlength="10"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="newAdminPw" placeholder="Min 6 characters"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="doCreateAdmin()">Create</button>
+      <button class="btn btn-outline" onclick="closeCreateAdmin()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Leave Record Modal -->
+<div class="modal-overlay" id="editRecordModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-title">✏️ Edit Leave Record</div>
+    <div id="editRecordAlert" class="alert"></div>
+    <input type="hidden" id="editRecordId">
+    <div class="form-row">
+      <div class="form-group"><label>Roll</label><input type="text" id="editRoll"></div>
+      <div class="form-group"><label>Name</label><input type="text" id="editName"></div>
+    </div>
+    <div class="form-group"><label>Email</label><input type="email" id="editEmail"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Leave Type</label><select id="editType"><option value="casual">Casual</option><option value="medical">Medical</option><option value="official_work">Official Work</option></select></div>
+      <div class="form-group"><label>Days</label><input type="number" id="editDays"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>From Date</label><input type="date" id="editFrom"></div>
+      <div class="form-group"><label>To Date</label><input type="date" id="editTo"></div>
+    </div>
+    <div class="form-group"><label>Reason</label><textarea id="editReason" rows="2"></textarea></div>
+    <div class="form-group"><label>Semester</label><select id="editSemester"><option value="sem1">Sem 1</option><option value="sem2">Sem 2</option></select></div>
+    <div class="form-group"><label>Approved By</label><select id="editApprovedBy"><option value="supervisor">Supervisor</option><option value="hod">HoD</option><option value="office">Office</option></select></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="doUpdateRecord()">Save Changes</button>
+      <button class="btn btn-outline" onclick="closeEditRecord()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Calendar -->
+<div id="tab-calendar" style="display:none;">
+  <div class="card">
+    <div class="card-title">📅 Month-wise Leave Calendar
+      <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+        <button class="btn btn-outline btn-sm" onclick="changeMonth(-1)">◀ Prev</button>
+        <strong id="calendarMonthLabel" style="min-width:110px;text-align:center;"></strong>
+        <button class="btn btn-outline btn-sm" onclick="changeMonth(1)">Next ▶</button>
+      </div>
+    </div>
+    <div id="calendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:16px;"></div>
+  </div>
+</div>
+
+<!-- Logs -->
+<div id="tab-logs" style="display:none;">
+  <div class="card">
+    <div class="card-title">📜 Activity Logs</div>
+    <div class="tbl-wrap"><table id="logsTable">
+      <tr><th>Name</th><th>Type</th><th>Action</th><th>Date</th><th>Time</th></tr>
+    </table></div>
+  </div>
+</div>
+
+<!-- Admin Audit Log -->
+<div id="tab-adminLogs" style="display:none;">
+  <div class="card">
+    <div class="card-title">🛡️ Admin Changes Audit Log <small style="color:var(--muted);font-weight:400;">(read-only)</small></div>
+    <div class="tbl-wrap"><table id="adminLogsTable">
+      <tr><th>Timestamp</th><th>Admin</th><th>Action</th><th>Record ID</th><th>Roll</th><th>Old Values</th><th>New Values</th></tr>
+    </table></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+var resetEmail='',resetType='';
+var studentsData=[],facultyData=[],appsData=[],leaveRecordsData=[],finalRecordsData=[],adminsData=[];
+
+window.onload=async function(){
+  await loadStats();
+  showTab('stats');
+};
+var currentCalendarMonth = new Date().toISOString().slice(0,7);
+
+async function loadStats(){
+  var r=await api('/api/admin/stats');
+  if(!r.success){location.href='/login';return;}
+  var s=r.stats;
+  document.getElementById('adminStats').innerHTML=`
+    <div class="stat-card"><div class="stat-icon">🎓</div><div class="stat-num">${s.total_students}</div><div class="stat-label">Students</div></div>
+    <div class="stat-card"><div class="stat-icon">👨‍🏫</div><div class="stat-num">${s.total_faculty}</div><div class="stat-label">Faculty</div></div>
+    <div class="stat-card orange"><div class="stat-icon">⏳</div><div class="stat-num">${s.pending}</div><div class="stat-label">Pending</div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-num">${s.approved}</div><div class="stat-label">Approved</div></div>
+    <div class="stat-card red"><div class="stat-icon">❌</div><div class="stat-num">${s.rejected}</div><div class="stat-label">Rejected</div></div>
+    <div class="stat-card"><div class="stat-icon">🏥</div><div class="stat-num">${s.medical}</div><div class="stat-label">Medical</div></div>
+    <div class="stat-card"><div class="stat-icon">🏖️</div><div class="stat-num">${s.casual}</div><div class="stat-label">Casual</div></div>`;
+}
+
+function showTab(t){
+  ['stats','users','admins','apps','leaveRecords','finalRecords','calendar','logs','adminLogs'].forEach(id=>{
+    var el=document.getElementById('tab-'+id); if(el) el.style.display=id===t?'':'none';
+  });
+  if(t==='users') loadUsers();
+  if(t==='admins') loadAdmins();
+  if(t==='apps')  loadApps();
+  if(t==='leaveRecords') loadLeaveRecords();
+  if(t==='finalRecords') loadFinalRecords();
+  if(t==='calendar') loadCalendar();
+  if(t==='logs')  loadLogs();
+  if(t==='adminLogs') loadAdminLogs();
+}
+
+async function loadUsers(){
+  var r=await api('/api/admin/users');
+  studentsData=r.students||[]; facultyData=r.faculty||[];
+  var st=document.getElementById('studentsTable');
+  st.innerHTML='<tr><th>Name</th><th>Roll</th><th>Email</th><th>Phone</th><th>Actions</th></tr>';
+  studentsData.forEach(u=>{
+    var tr=st.insertRow();
+    tr.innerHTML=`<td>${u.Name}</td><td>${u.RollNumber}</td><td>${u.OfficialEmail}</td><td>${u.MobileNumber}</td>
+    <td><button class="btn btn-warning btn-sm" onclick="openReset('${u.OfficialEmail}','student')">🔑 Reset PW</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:6px;" onclick="disableUser('${u.OfficialEmail}','student')">🚫 Disable</button></td>`;
+  });
+  var ft=document.getElementById('facultyTable');
+  ft.innerHTML='<tr><th>Name</th><th>EmpID</th><th>Email</th><th>Phone</th><th>Actions</th></tr>';
+  facultyData.forEach(u=>{
+    var tr=ft.insertRow();
+    tr.innerHTML=`<td>${u.Name}</td><td>${u.EmployeeID}</td><td>${u.OfficialEmail}</td><td>${u.MobileNumber}</td>
+    <td><button class="btn btn-warning btn-sm" onclick="openReset('${u.OfficialEmail}','faculty')">🔑 Reset PW</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:6px;" onclick="disableUser('${u.OfficialEmail}','faculty')">🚫 Disable</button></td>`;
+  });
+}
+
+async function loadApps(){
+  var r=await api('/api/admin/applications');
+  appsData=r.applications||[];
+  var t=document.getElementById('appsTable');
+  t.innerHTML='<tr><th>ID</th><th>Student</th><th>Type</th><th>Period</th><th>Supervisor</th><th>HoD</th><th>Status</th></tr>';
+  appsData.forEach(a=>{
+    var tr=t.insertRow();
+    var sBadge=a.status==='approved'?'badge-approved ✅ Approved':a.status==='rejected'?'badge-rejected ❌ Rejected':'badge-pending ⏳ '+a.status;
+    var p=sBadge.split(' ');
+    tr.innerHTML=`<td><strong>${a.id}</strong></td><td>${a.name}<br><small>${a.roll}</small></td>
+    <td>${a.type}</td><td>${a.from_date} → ${a.to_date} (${a.days}d)</td>
+    <td>${a.supervisor}</td><td>${a.hod}</td>
+    <td><span class="badge ${p[0]}">${p.slice(1).join(' ')}</span></td>`;
+  });
+}
+
+async function loadLogs(){
+  var r=await api('/api/admin/logs');
+  var logs=r.logs||[];
+  var t=document.getElementById('logsTable');
+  t.innerHTML='<tr><th>Name</th><th>Type</th><th>Action</th><th>Date</th><th>Time</th></tr>';
+  logs.slice().reverse().forEach(l=>{
+    var tr=t.insertRow();
+    tr.innerHTML=`<td>${l.name}</td><td>${l.user_type}</td><td>${l.action}</td><td>${l.date}</td><td>${l.time}</td>`;
+  });
+}
+
+async function loadLeaveRecords(){
+  var params = new URLSearchParams();
+  var roll = document.getElementById('filterRoll').value.trim();
+  var fromD = document.getElementById('filterFrom').value;
+  var toD = document.getElementById('filterTo').value;
+  var typeF = document.getElementById('filterType').value;
+  if(roll) params.append('roll', roll);
+  if(fromD) params.append('from', fromD);
+  if(toD) params.append('to', toD);
+  if(typeF) params.append('type', typeF);
+  var url = '/api/admin/leave-records' + (params.toString() ? '?' + params.toString() : '');
+  var r=await api(url);
+  leaveRecordsData=r.records||[];
+  var t=document.getElementById('leaveRecordsTable');
+  t.innerHTML='<tr><th>ID</th><th>Student</th><th>Type</th><th>Period</th><th>Days</th><th>Reason</th><th>Approved By</th><th>Actions</th></tr>';
+  if(!leaveRecordsData.length){
+    var tr=t.insertRow(); tr.innerHTML='<td colspan="8" style="text-align:center;color:var(--muted);">No records match</td>';
+    return;
+  }
+  leaveRecordsData.forEach(a=>{
+    var tr=t.insertRow();
+    tr.innerHTML=`<td><small>${a.id}</small></td><td>${a.name}<br><small>${a.roll}</small></td>
+    <td>${a.leave_type}</td><td>${a.from_date} → ${a.to_date}</td><td>${a.days}</td>
+    <td>${a.reason}</td><td>${a.approved_by}</td>
+    <td><button class="btn btn-warning btn-sm" onclick="openEditRecord('${a.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:6px;" onclick="deleteLeaveRecord('${a.id}')">🗑️ Delete</button></td>`;
+  });
+}
+
+function applyFilters(){ loadLeaveRecords(); }
+
+function clearFilters(){
+  document.getElementById('filterRoll').value='';
+  document.getElementById('filterFrom').value='';
+  document.getElementById('filterTo').value='';
+  document.getElementById('filterType').value='';
+  loadLeaveRecords();
+}
+
+function exportFilteredLeaveRecords(){
+  var params = new URLSearchParams();
+  var roll = document.getElementById('filterRoll').value.trim();
+  var fromD = document.getElementById('filterFrom').value;
+  var toD = document.getElementById('filterTo').value;
+  var typeF = document.getElementById('filterType').value;
+  if(roll) params.append('roll', roll);
+  if(fromD) params.append('from', fromD);
+  if(toD) params.append('to', toD);
+  if(typeF) params.append('type', typeF);
+  var url = '/api/admin/leave-records/export.csv' + (params.toString() ? '?' + params.toString() : '');
+  window.location.href = url;
+}
+
+async function loadFinalRecords(){
+  var r=await api('/api/admin/final-records');
+  finalRecordsData=r.records||[];
+  var rollF=document.getElementById('filterFinalRoll').value.trim().toLowerCase();
+  var fromF=document.getElementById('filterFinalFrom').value;
+  var toF=document.getElementById('filterFinalTo').value;
+  var typeF=document.getElementById('filterFinalType').value;
+
+  // If date range is set, restrict to students with leave periods overlapping that range
+  var rollsInRange=null;
+  if(fromF || toF){
+    var params=new URLSearchParams();
+    if(rollF) params.append('roll',rollF);
+    if(fromF) params.append('from',fromF);
+    if(toF) params.append('to',toF);
+    if(typeF) params.append('type',typeF);
+    var lr=await api('/api/admin/leave-records'+(params.toString()?'?'+params.toString():''));
+    rollsInRange=new Set((lr.records||[]).map(x=>x.roll));
+  }
+
+  finalRecordsData=finalRecordsData.filter(a=>{
+    if(rollF && !a.roll.toLowerCase().includes(rollF)) return false;
+    if(rollsInRange && !rollsInRange.has(a.roll)) return false;
+    if(typeF==='casual' && parseInt(a.casual_used||0)===0) return false;
+    if(typeF==='medical' && parseInt(a.medical_used||0)===0) return false;
+    return true;
+  });
+  var t=document.getElementById('finalRecordsTable');
+  t.innerHTML='<tr><th>Roll</th><th>Name</th><th>Casual Used/Rem</th><th>Medical Used/Rem</th><th>Last Updated</th></tr>';
+  if(!finalRecordsData.length){
+    var tr=t.insertRow(); tr.innerHTML='<td colspan="5" style="text-align:center;color:var(--muted);">No records match</td>';
+    return;
+  }
+  finalRecordsData.forEach(a=>{
+    var tr=t.insertRow();
+    tr.innerHTML=`<td>${a.roll}</td><td>${a.name}</td>
+    <td>${a.casual_used} / ${a.casual_remaining}</td>
+    <td>${a.medical_used} / ${a.medical_remaining}</td>
+    <td>${new Date(a.last_updated).toLocaleString()}</td>`;
+  });
+}
+
+function clearFinalFilters(){
+  document.getElementById('filterFinalRoll').value='';
+  document.getElementById('filterFinalFrom').value='';
+  document.getElementById('filterFinalTo').value='';
+  document.getElementById('filterFinalType').value='';
+  loadFinalRecords();
+}
+
+async function loadAdmins(){
+  var r=await api('/api/admin/admins');
+  adminsData=r.admins||[];
+  var t=document.getElementById('adminsTable');
+  t.innerHTML='<tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr>';
+  adminsData.forEach(a=>{
+    var tr=t.insertRow();
+    var statusBadge = a.Status==='active' ? '<span class="badge badge-approved">Active</span>' : '<span class="badge badge-rejected">Disabled</span>';
+    tr.innerHTML=`<td>${a.Name}</td><td>${a.Email}</td><td>${a.Phone||'–'}</td><td>${statusBadge}</td>
+    <td><button class="btn btn-warning btn-sm" onclick="resetAdminPw('${a.Email}')">🔑 Reset PW</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:6px;" onclick="toggleAdminStatus('${a.Email}','${a.Status==='active'?'disabled':'active'}')">${a.Status==='active'?'🚫 Disable':'✅ Enable'}</button></td>`;
+  });
+}
+
+async function deleteLeaveRecord(id){
+  if(!confirm('Delete this leave record? The final balance will be recalculated.'))return;
+  var r=await api('/api/admin/leave-record/delete','POST',{id});
+  if(r.success){loadLeaveRecords();loadFinalRecords();}
+  else alert(r.message);
+}
+
+function openEditRecord(id){
+  var a=leaveRecordsData.find(x=>x.id===id);
+  if(!a)return;
+  document.getElementById('editRecordId').value=a.id;
+  document.getElementById('editRoll').value=a.roll;
+  document.getElementById('editName').value=a.name;
+  document.getElementById('editEmail').value=a.email;
+  document.getElementById('editType').value=a.leave_type;
+  document.getElementById('editDays').value=a.days;
+  document.getElementById('editFrom').value=a.from_date;
+  document.getElementById('editTo').value=a.to_date;
+  document.getElementById('editReason').value=a.reason;
+  document.getElementById('editSemester').value=a.semester;
+  document.getElementById('editApprovedBy').value=a.approved_by;
+  document.getElementById('editRecordModal').classList.add('active');
+}
+function closeEditRecord(){document.getElementById('editRecordModal').classList.remove('active');}
+
+async function doUpdateRecord(){
+  var id=document.getElementById('editRecordId').value;
+  var data={
+    id:id,
+    roll:document.getElementById('editRoll').value.trim(),
+    name:document.getElementById('editName').value.trim(),
+    email:document.getElementById('editEmail').value.trim(),
+    leave_type:document.getElementById('editType').value,
+    days:parseInt(document.getElementById('editDays').value)||0,
+    from_date:document.getElementById('editFrom').value,
+    to_date:document.getElementById('editTo').value,
+    reason:document.getElementById('editReason').value.trim(),
+    semester:document.getElementById('editSemester').value,
+    approved_by:document.getElementById('editApprovedBy').value
+  };
+  var r=await api('/api/admin/leave-record/update','POST',data);
+  if(r.success){closeEditRecord();loadLeaveRecords();loadFinalRecords();}
+  else showAlert('editRecordAlert',r.message,'error');
+}
+
+function openCreateAdmin(){document.getElementById('createAdminModal').classList.add('active');}
+function closeCreateAdmin(){document.getElementById('createAdminModal').classList.remove('active');}
+
+async function doCreateAdmin(){
+  var name=document.getElementById('newAdminName').value.trim();
+  var email=document.getElementById('newAdminEmail').value.trim();
+  var phone=document.getElementById('newAdminPhone').value.trim();
+  var pw=document.getElementById('newAdminPw').value;
+  if(!name||!email||!phone||!pw){showAlert('createAdminAlert','Please fill all fields','error');return;}
+  if(pw.length<6){showAlert('createAdminAlert','Min 6 characters','error');return;}
+  if(!/^\d{10}$/.test(phone)){showAlert('createAdminAlert','Enter a valid 10-digit mobile number','error');return;}
+  var r=await api('/api/admin/create','POST',{name,email,phone,password:pw});
+  if(r.success){closeCreateAdmin();loadAdmins();}
+  else showAlert('createAdminAlert',r.message,'error');
+}
+
+async function toggleAdminStatus(email,status){
+  if(!confirm('Change admin status to '+status+'?'))return;
+  var r=await api('/api/admin/update-status','POST',{email,status});
+  if(r.success){loadAdmins();}
+  else alert(r.message);
+}
+
+async function resetAdminPw(email){
+  var pw=prompt('Enter new password for '+email+' (min 6 characters):');
+  if(!pw)return;
+  if(pw.length<6){alert('Min 6 characters');return;}
+  var r=await api('/api/admin/reset-admin-password','POST',{email,password:pw});
+  if(r.success){alert('Password reset for '+email);}
+  else alert(r.message);
+}
+
+function openReset(email,type){resetEmail=email;resetType=type;
+  document.getElementById('resetTarget').textContent='Reset password for: '+email;
+  document.getElementById('resetPw').value='';
+  document.getElementById('resetModal').classList.add('active');}
+function closeReset(){document.getElementById('resetModal').classList.remove('active');}
+
+async function doReset(){
+  var pw=document.getElementById('resetPw').value;
+  if(pw.length<6){alert('Min 6 characters');return;}
+  var r=await api('/api/admin/reset-password','POST',{email:resetEmail,password:pw,utype:resetType});
+  if(r.success){alert('Password reset for '+resetEmail);closeReset();}
+  else alert(r.message);
+}
+
+async function disableUser(email,type){
+  if(!confirm('Disable account for '+email+'?'))return;
+  var r=await api('/api/admin/user/disable','POST',{email,utype:type});
+  if(r.success){alert('Account disabled');loadUsers();}
+  else alert(r.message);
+}
+
+async function resetCSV(which){
+  var names={'applications':'Applications','leave-records':'Leave Records','final-records':'Final Records'};
+  if(!confirm('⚠️ This will DELETE ALL '+names[which]+' and save a backup in deleted_records/. Continue?')) return;
+  var r=await api('/api/admin/reset/'+which,'POST',{});
+  if(r.success){
+    alert('Reset complete. Backup saved in deleted_records/');
+    if(which==='applications') loadApps();
+    if(which==='leave-records'){ loadLeaveRecords(); loadFinalRecords(); }
+    if(which==='final-records') loadFinalRecords();
+  } else alert(r.message);
+}
+
+async function loadCalendar(){
+  var r=await api('/api/admin/calendar?month='+currentCalendarMonth);
+  document.getElementById('calendarMonthLabel').textContent = currentCalendarMonth;
+  var grid=document.getElementById('calendarGrid');
+  if(!r.success){ grid.innerHTML='<p style="color:var(--danger);">'+r.message+'</p>'; return; }
+  var start=new Date(r.start), end=new Date(r.end);
+  var weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var html=weekdays.map(d=>`<div style="font-weight:700;text-align:center;padding:8px;background:var(--primary);color:#fff;border-radius:8px;">${d}</div>`).join('');
+  var firstDay=start.getDay();
+  for(var i=0;i<firstDay;i++) html+='<div style="min-height:90px;background:#f5f7fa;border-radius:8px;"></div>';
+  function fmt(dt){ var y=dt.getFullYear(); var m=('0'+(dt.getMonth()+1)).slice(-2); var d=('0'+dt.getDate()).slice(-2); return y+'-'+m+'-'+d; }
+  var leavesByDay={};
+  r.leaves.forEach(l=>{
+    var rf=new Date(l.from_date), rt=new Date(l.to_date);
+    for(var d=new Date(rf); d<=rt; d.setDate(d.getDate()+1)){
+      var key=fmt(d);
+      if(key>=r.start && key<=r.end){
+        if(!leavesByDay[key]) leavesByDay[key]=[];
+        leavesByDay[key].push(l);
+      }
+    }
+  });
+  for(var d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
+    var key=fmt(d);
+    var dayLeaves=leavesByDay[key]||[];
+    var items=dayLeaves.map(l=>`<div style="font-size:11px;padding:3px 5px;margin:2px 0;border-radius:6px;background:${l.status==='approved'?'#e8f5e9':'#fff8e1'};border-left:3px solid ${l.status==='approved'?'#00c853':'#ff9800'};">${l.name} <small>(${l.leave_type})</small></div>`).join('');
+    html+=`<div style="min-height:90px;background:#fff;border:1px solid #e0e6ed;border-radius:8px;padding:6px;">
+      <div style="font-weight:700;color:var(--primary);margin-bottom:4px;">${d.getDate()}</div>
+      ${items}
+    </div>`;
+  }
+  grid.innerHTML=html;
+}
+
+function changeMonth(delta){
+  var [y,m]=currentCalendarMonth.split('-').map(Number);
+  var nd=new Date(y,m-1+delta,1);
+  currentCalendarMonth=nd.toISOString().slice(0,7);
+  loadCalendar();
+}
+
+async function loadAdminLogs(){
+  var r=await api('/api/admin/admin-changes-log');
+  var logs=r.logs||[];
+  var t=document.getElementById('adminLogsTable');
+  t.innerHTML='<tr><th>Timestamp</th><th>Admin</th><th>Action</th><th>Record ID</th><th>Roll</th><th>Old Values</th><th>New Values</th></tr>';
+  logs.slice().reverse().forEach(l=>{
+    var tr=t.insertRow();
+    tr.innerHTML=`<td>${new Date(l.timestamp).toLocaleString()}</td><td>${l.admin_email}</td><td>${l.action}</td><td>${l.record_id||'–'}</td><td>${l.roll||'–'}</td><td style="max-width:200px;word-break:break-all;font-size:12px;">${l.old_values||'–'}</td><td style="max-width:200px;word-break:break-all;font-size:12px;">${l.new_values||'–'}</td>`;
+  });
+}
+
+function exportCSV(type){
+  var data=type==='students'?studentsData:facultyData;
+  if(!data.length){alert('No data');return;}
+  var headers=Object.keys(data[0]).filter(k=>k!=='PasswordHash');
+  var csv=headers.join(',')+'\n'+data.map(r=>headers.map(h=>`"${(r[h]||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  download(csv,type+'_export.csv','text/csv');
+}
+
+function exportApps(){
+  if(!appsData.length){alert('No data');return;}
+  var headers=['id','roll','name','type','from_date','to_date','days','status','supervisor','hod'];
+  var csv=headers.join(',')+'\n'+appsData.map(r=>headers.map(h=>`"${(r[h]||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  download(csv,'applications_export.csv','text/csv');
+}
+
+function exportLeaveRecords(){
+  if(!leaveRecordsData.length){alert('No data');return;}
+  var headers=['id','application_id','roll','name','email','leave_type','from_date','to_date','days','reason','semester','approved_by','approved_at'];
+  var csv=headers.join(',')+'\n'+leaveRecordsData.map(r=>headers.map(h=>`"${(r[h]||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  download(csv,'all_leave_records_export.csv','text/csv');
+}
+
+function exportFinalRecords(){
+  if(!finalRecordsData.length){alert('No data');return;}
+  var headers=['roll','name','email','semester','casual_total','casual_used','casual_remaining','medical_total','medical_used','medical_remaining','last_updated'];
+  var csv=headers.join(',')+'\n'+finalRecordsData.map(r=>headers.map(h=>`"${(r[h]||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  download(csv,'final_leave_records_export.csv','text/csv');
+}
+
+function download(content,filename,type){
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=filename;a.click();
+}
+</script>
+{% endblock %}

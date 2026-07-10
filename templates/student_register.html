@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Student Registration{% endblock %}
+{% block topbar %}
+<div class="topbar">
+  <div class="topbar-brand">🎓 CAIR Leave Portal</div>
+  <div class="topbar-nav">
+    <a href="/">← Home</a>
+    <a href="/login?type=student">Login</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:560px;margin:30px auto;">
+  <div class="card">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:48px;">🎓</div>
+      <h2 style="color:var(--primary);">Student Registration</h2>
+      <p style="color:var(--muted);font-size:14px;">Create your CAIR Leave Portal account</p>
+    </div>
+
+    <div id="regAlert" class="alert"></div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="rName" placeholder="Your full name">
+      </div>
+      <div class="form-group">
+        <label>Roll Number</label>
+        <input type="text" id="rRoll" placeholder="e.g. B21001">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Official Email (Institute Email)</label>
+      <input type="email" id="rEmail" placeholder="yourname@students.iitmandi.ac.in">
+    </div>
+
+    <div class="form-group">
+      <label>Mobile Number</label>
+      <input type="tel" id="rPhone" placeholder="10-digit mobile number" maxlength="10">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="rPw" placeholder="Min 6 characters">
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="rPw2" placeholder="Re-enter password" oninput="checkPwMatch()">
+        <small id="pwMatchMsg" style="display:none;font-size:12px;font-weight:600;margin-top:4px;"></small>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="doRegister()" style="width:100%;justify-content:center;">
+      <span class="spinner" id="regSpinner"></span> Create Account
+    </button>
+    <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--muted);">
+      Already have an account? <a href="/login?type=student" style="color:var(--primary);font-weight:700;">Login here</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function checkPwMatch(){
+  var pw  = document.getElementById('rPw').value;
+  var pw2 = document.getElementById('rPw2').value;
+  var msg = document.getElementById('pwMatchMsg');
+  if(!pw2){ msg.style.display='none'; return; }
+  if(pw === pw2){
+    msg.style.display='block'; msg.style.color='#1b5e20';
+    msg.textContent='✅ Passwords match';
+  } else {
+    msg.style.display='block'; msg.style.color='#b71c1c';
+    msg.textContent='❌ Passwords do not match';
+  }
+}
+
+async function doRegister(){
+  var name  = document.getElementById('rName').value.trim();
+  var roll  = document.getElementById('rRoll').value.trim();
+  var email = document.getElementById('rEmail').value.trim();
+  var phone = document.getElementById('rPhone').value.trim();
+  var pw    = document.getElementById('rPw').value;
+  var pw2   = document.getElementById('rPw2').value;
+
+  if(!name||!roll||!email||!phone||!pw||!pw2){
+    showAlert('regAlert','Please fill all fields','error'); return;}
+  if(pw !== pw2){
+    showAlert('regAlert','Passwords do not match','error'); return;}
+  if(pw.length < 6){
+    showAlert('regAlert','Password must be at least 6 characters','error'); return;}
+  if(!/^\d{10}$/.test(phone)){
+    showAlert('regAlert','Enter a valid 10-digit mobile number','error'); return;}
+
+  document.getElementById('regSpinner').classList.add('show');
+  var r = await api('/api/student/register','POST',{name,roll,email,phone,password:pw});
+  document.getElementById('regSpinner').classList.remove('show');
+
+  if(r.success){
+    showAlert('regAlert','✅ Account created! Redirecting to login…','success');
+    setTimeout(()=>location.href='/login?type=student', 2000);
+  } else {
+    showAlert('regAlert', r.message, 'error');
+  }
+}
+</script>
+{% endblock %}

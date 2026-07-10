@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CAIR Leave Portal{% endblock %} – IIT Mandi</title>
+<style>
+:root{--primary:#1a237e;--primary-light:#3949ab;--accent:#00bcd4;--success:#00c853;
+  --danger:#ff1744;--warning:#ffc400;--bg:#f0f2f8;--card:#fff;--text:#263238;--muted:#607d8b;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height:100vh;color:var(--text);}
+
+/* ── Watermark ── */
+body::before{
+  content:'';position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:min(500px,80vw);height:min(500px,80vw);
+  background:url('/static/cair_logo1.png') center/contain no-repeat;
+  opacity: 0.2;pointer-events:none;z-index:0;}
+
+/* ── Topbar ── */
+.topbar{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-light) 100%);
+  color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;
+  height:60px;box-shadow:0 2px 12px rgba(26,35,126,.4);position:sticky;top:0;z-index:100;}
+.topbar-brand{font-size:18px;font-weight:700;letter-spacing:.5px;}
+.topbar-brand span{opacity:.75;font-size:13px;font-weight:400;margin-left:8px;}
+.topbar-nav{display:flex;gap:8px;align-items:center;}
+.topbar-nav a{color:rgba(255,255,255,.85);text-decoration:none;padding:6px 14px;
+  border-radius:8px;font-size:13px;font-weight:600;transition:.2s;}
+.topbar-nav a:hover{background:rgba(255,255,255,.15);color:#fff;}
+.topbar-nav a.danger{background:rgba(255,23,68,.25);}
+.topbar-nav a.danger:hover{background:rgba(255,23,68,.45);}
+
+/* ── Layout ── */
+.page{max-width:1100px;margin:0 auto;padding:28px 16px;position:relative;z-index:1;}
+.card{background:var(--card);border-radius:18px;padding:28px;
+  box-shadow:0 4px 24px rgba(0,0,0,.07);margin-bottom:24px;}
+.card-title{font-size:18px;font-weight:700;color:var(--primary);margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;}
+
+/* ── Forms ── */
+.form-group{margin-bottom:18px;}
+.form-group label{display:block;margin-bottom:7px;font-weight:600;font-size:13px;
+  text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:13px 16px;border:2px solid #e0e6ed;border-radius:12px;
+  font-size:15px;background:#fafbfc;transition:.25s;font-family:inherit;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  outline:none;border-color:var(--primary);background:#fff;
+  box-shadow:0 0 0 4px rgba(26,35,126,.07);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:600px){.form-row{grid-template-columns:1fr;}}
+
+/* ── Buttons ── */
+.btn{padding:13px 28px;border:none;border-radius:12px;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.25s;text-transform:uppercase;letter-spacing:.5px;
+  display:inline-flex;align-items:center;gap:8px;}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  color:#fff;box-shadow:0 4px 15px rgba(26,35,126,.3);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(26,35,126,.4);}
+.btn-success{background:linear-gradient(135deg,var(--success),#69f0ae);color:#fff;}
+.btn-danger{background:linear-gradient(135deg,var(--danger),#ff5252);color:#fff;}
+.btn-warning{background:linear-gradient(135deg,var(--warning),#ffab00);color:#212529;}
+.btn-outline{background:transparent;border:2px solid var(--primary);color:var(--primary);}
+.btn-sm{padding:8px 16px;font-size:12px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+
+/* ── Alerts ── */
+.alert{padding:14px 18px;border-radius:12px;margin:14px 0;font-weight:600;font-size:14px;display:none;}
+.alert.show{display:block;}
+.alert-success{background:#e8f5e9;color:#1b5e20;border-left:4px solid var(--success);}
+.alert-error{background:#ffebee;color:#b71c1c;border-left:4px solid var(--danger);}
+.alert-info{background:#e3f2fd;color:#0d47a1;border-left:4px solid var(--accent);}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.badge-pending{background:#fff8e1;color:#e65100;}
+.badge-approved{background:#e8f5e9;color:#1b5e20;}
+.badge-rejected{background:#ffebee;color:#b71c1c;}
+.badge-draft{background:#f3e5f5;color:#6a1b9a;}
+.badge-hod{background:#e3f2fd;color:#0d47a1;}
+.badge-office{background:#e0f7fa;color:#006064;}
+.badge-explanation{background:#fff3e0;color:#e65100;}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{background:var(--primary);color:#fff;padding:12px 14px;text-align:left;font-size:12px;text-transform:uppercase;}
+td{padding:12px 14px;border-bottom:1px solid #eceff1;vertical-align:middle;}
+tr:hover td{background:#f5f7fa;}
+
+/* ── Stats grid ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;margin-bottom:24px;}
+.stat-card{background:var(--card);border-radius:16px;padding:22px;text-align:center;
+  box-shadow:0 4px 20px rgba(0,0,0,.06);position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:4px;
+  background:linear-gradient(90deg,var(--primary),var(--accent));}
+.stat-card.green::after{background:linear-gradient(90deg,var(--success),#69f0ae);}
+.stat-card.red::after{background:linear-gradient(90deg,var(--danger),#ff5252);}
+.stat-card.orange::after{background:linear-gradient(90deg,var(--warning),#ffab00);}
+.stat-icon{font-size:36px;margin-bottom:8px;}
+.stat-num{font-size:38px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-card.green .stat-num{background:linear-gradient(135deg,var(--success),#69f0ae);-webkit-background-clip:text;}
+.stat-card.red   .stat-num{background:linear-gradient(135deg,var(--danger),#ff5252);-webkit-background-clip:text;}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+
+/* ── Timeline ── */
+.timeline{padding:10px 0;}
+.tl-step{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;position:relative;}
+.tl-step:not(:last-child)::after{content:'';position:absolute;left:19px;top:40px;
+  width:2px;height:calc(100% + 4px);background:#e0e6ed;}
+.tl-dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:18px;flex-shrink:0;z-index:1;}
+.tl-dot.done{background:#e8f5e9;}
+.tl-dot.active{background:#fff8e1;box-shadow:0 0 0 4px rgba(255,196,0,.2);}
+.tl-dot.wait{background:#f5f7fa;}
+.tl-dot.rej{background:#ffebee;}
+.tl-info strong{font-size:14px;display:block;}
+.tl-info small{color:var(--muted);font-size:12px;}
+.tl-remark{font-size:12px;color:#e65100;background:#fff8e1;padding:6px 10px;
+  border-radius:8px;margin-top:4px;display:inline-block;}
+
+/* ── Modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+  z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal{background:#fff;border-radius:20px;padding:32px;max-width:480px;width:90%;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-title{font-size:20px;font-weight:700;color:var(--primary);margin-bottom:20px;}
+
+/* ── Spinner ── */
+.spinner{display:none;width:22px;height:22px;border:3px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+.spinner.show{display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── OTP input ── */
+.otp-row{display:flex;gap:10px;align-items:flex-end;}
+.otp-row input{flex:1;}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .topbar{height:auto;padding:12px 16px;flex-wrap:wrap;gap:8px;}
+  .page{padding:16px 10px;}
+  .card{padding:18px;}
+}
+
+/* ── Notification bell ── */
+.notif-bell{position:relative;cursor:pointer;padding:8px;}
+.notif-count{position:absolute;top:2px;right:2px;background:var(--danger);color:#fff;
+  font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;
+  display:flex;align-items:center;justify-content:center;}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% block topbar %}
+<div class="topbar">
+  <div class="topbar-brand">🎓 CAIR Leave Portal <span>IIT Mandi</span></div>
+  <div class="topbar-nav">
+    {% block nav_links %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
+
+<div class="page">
+  {% block content %}{% endblock %}
+</div>
+
+<script>
+function showAlert(id,msg,type){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=msg;
+  el.className='alert alert-'+type+' show';
+  setTimeout(()=>el.classList.remove('show'),5000);
+}
+async function api(url,method,data){
+  var opts={method:method||'GET',headers:{'Content-Type':'application/json'}};
+  if(data) opts.body=JSON.stringify(data);
+  var r=await fetch(url,opts);
+  return r.json();
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
