@@ -32,18 +32,16 @@ APP_BASE_URL  = os.environ.get('APP_BASE_URL', 'http://localhost:5000')
 
 # ── Faculty (hard-coded, synced with FACULTY dict) ───────────────────────────
 FACULTY = {
-    'Prof. Dipankar Deb':       {'email': 'shrutibaghel19@gmail.com', 'role': 'supervisor'},
-    'Dr. Amit Shukla':          {'email': 'shrutibaghel19@gmail.com', 'role': 'supervisor'},
-    'Dr. Radhe Shyam Sharma':   {'email': 'shrutibaghel19@gmail.com', 'role': 'supervisor'},
-    'Dr. Praful Hambarde':      {'email': 'shrutibaghel19@gmail.com', 'role': 'supervisor'},
-    'Dr. Deepak Raina':         {'email': 'shrutibaghel19@gmail.com', 'role': 'supervisor'},
-    'Shruti Singh':             {'email': 'shrutibaghel19@gmail.com', 'role': 'supervisor'},
-    'Dr. Narendra Kumar Dhar ': {'email': 'shrutibaghel19@gmail.com', 'role': 'supervisor'},
-    'Dr. Narendra Kumar Dhar':  {'email': 'shrutibaghel19@gmail.com', 'role': 'hod'},
+    'Prof. Dipankar Deb':       {'email': 'deepak.raina@iitmandi.ac.in', 'role': 'supervisor'},
+    'Dr. Amit Shukla':          {'email': 'deepak.raina@iitmandi.ac.in', 'role': 'supervisor'},
+    'Dr. Radhe Shyam Sharma':   {'email': 'deepak.raina@iitmandi.ac.in', 'role': 'supervisor'},
+    'Dr. Praful Hambarde':      {'email': 'deepak.raina@iitmandi.ac.in', 'role': 'supervisor'},
+    'Dr. Deepak Raina':         {'email': 'deepak.raina@iitmandi.ac.in', 'role': 'supervisor'},
+    'Dr. Narendra Kumar Dhar ': {'email': 'deepak.raina@iitmandi.ac.in', 'role': 'supervisor'},
+    'Dr. Narendra Kumar Dhar':  {'email': 'deepak.raina@iitmandi.ac.in', 'role': 'hod'},
 }
 
-
-CAIR_OFFICE = {'email': 'shrutibaghel19@gmail.com', 'name': 'CAIR Office'}
+CAIR_OFFICE = {'email': 'deepak.raina@iitmandi.ac.in', 'name': 'CAIR Office'}
 
 # Admin login (faculty web-login removed; approvals are via email only)
 ADMIN_EMAIL = 'admin@iitmandi.ac.in'
@@ -318,7 +316,7 @@ def otp_verify(email, code, purpose):
     entry['attempts'] += 1
     if entry['attempts'] > 5:
         del otp_store[email]; return False, 'Too many attempts'
-    if entry['otp'] != code: return False, 'Incorrect OTP'
+    if entry['otp'] != str(code).strip(): return False, 'Incorrect OTP'
     del otp_store[email]; return True, 'OK'
 
 # ── Approval email builders ───────────────────────────────────────────────────
